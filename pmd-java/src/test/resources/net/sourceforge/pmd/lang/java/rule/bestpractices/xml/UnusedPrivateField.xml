@@ -2,7 +2,7 @@
 <test-data
     xmlns="http://pmd.sourceforge.net/rule-tests"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests http://pmd.sourceforge.net/rule-tests_1_0_0.xsd">
+    xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests https://pmd.github.io/schema/rule-tests_1_1_0.xsd">
 
     <test-code>
         <description>simple unused private field</description>
@@ -827,6 +827,93 @@ public class Tester {
     Object anonymousClass = new Object() {
         private int x = 2021; // Unused, should report a warning
     };
+}
+]]></code>
+    </test-code>
+
+    <test-code>
+        <description>#3632 [java] Make UnusedPrivateField consider enum classes</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+class Test {
+  enum EnumClass {
+      subClass();
+      EnumClass() {}
+      private int a;  // should report a warning here
+  }
+}
+]]></code>
+    </test-code>
+
+    <test-code>
+        <description>#3632 [java] Make UnusedPrivateField consider enum classes (top-level)</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>4</expected-linenumbers>
+        <code><![CDATA[
+enum EnumClass {
+  subClass();
+  EnumClass() {}
+  private int a;  // should report a warning here
+}
+]]></code>
+    </test-code>
+
+    <test-code>
+        <description>#1433 [java] UnusedPrivateField: false positive when field has the same name as the class</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+public class Board {
+    private int[] Board;
+
+    public Board(int[] b) {
+        for (int i = 0; i < b.length; i++)
+            Board[i] = b[i];
+    }
+
+    public int size() {
+        return Board.length;
+    }
+}
+]]></code>
+    </test-code>
+
+    <test-code>
+        <description>[java] UnusedPrivateField doesn't play well with UnnecessaryWarningSuppression #5785 - case 1</description>
+        <expected-problems>0</expected-problems>
+        <expected-suppressions>
+            <suppressor line="3">@SuppressWarnings</suppressor>
+        </expected-suppressions>
+        <code><![CDATA[
+@SuppressWarnings("unused")
+public class Foo {
+    private String foo;
+}
+]]></code>
+    </test-code>
+
+    <test-code>
+        <description>[java] UnusedPrivateField doesn't play well with UnnecessaryWarningSuppression #5785 - case 2</description>
+        <expected-problems>0</expected-problems>
+        <expected-suppressions>
+            <suppressor line="3">@SuppressWarnings</suppressor>
+        </expected-suppressions>
+        <code><![CDATA[
+public class Foo {
+    @SuppressWarnings("unused")
+    private String foo;
+}
+]]></code>
+    </test-code>
+
+    <test-code>
+        <description>[java] UnusedPrivateField doesn't play well with UnnecessaryWarningSuppression #5785 - valid violation</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>3</expected-linenumbers>
+        <code><![CDATA[
+@SuppressWarnings("unchecked")
+public class Foo {
+    private String foo; // unused
 }
 ]]></code>
     </test-code>

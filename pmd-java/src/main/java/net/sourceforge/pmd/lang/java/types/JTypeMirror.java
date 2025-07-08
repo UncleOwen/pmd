@@ -325,7 +325,7 @@ public interface JTypeMirror extends JTypeVisitable {
      * Returns true if this is {@link TypeSystem#NO_TYPE}, ie {@code void}.
      */
     default boolean isVoid() {
-        return this == getTypeSystem().NO_TYPE; // NOPMD CompareObjectsWithEquals
+        return this == getTypeSystem().NO_TYPE;
     }
 
     /** Returns true if this is an {@linkplain JArrayType array type}. */
@@ -456,7 +456,8 @@ public interface JTypeMirror extends JTypeVisitable {
     /**
      * Returns a type mirror that is equal to this instance but has different
      * type annotations. Note that some types ignore this method and return
-     * themselves without changing. Eg the null type cannot be annotated.
+     * themselves without changing. Eg the null type or void type cannot be
+     * annotated.
      *
      * @param newTypeAnnots New type annotations (not null)
      *

@@ -7,7 +7,6 @@ package net.sourceforge.pmd.lang.java.ast;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import net.sourceforge.pmd.lang.ast.impl.GenericNode;
 import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
 import net.sourceforge.pmd.lang.java.types.JClassType;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
@@ -32,8 +31,8 @@ public interface ASTExecutableDeclaration
     extends ModifierOwner,
             ASTBodyDeclaration,
             TypeParamOwnerNode,
-            GenericNode<JavaNode>,
-            JavadocCommentOwner {
+            JavadocCommentOwner,
+            ReturnScopeNode {
 
 
     @Override
@@ -90,8 +89,8 @@ public interface ASTExecutableDeclaration
      * Returns the body of this method or constructor. Returns null if
      * this is the declaration of an abstract method.
      */
-    @Nullable
-    default ASTBlock getBody() {
+    @Override
+    default @Nullable ASTBlock getBody() {
         JavaNode last = getLastChild();
         return last instanceof ASTBlock ? (ASTBlock) last : null;
     }

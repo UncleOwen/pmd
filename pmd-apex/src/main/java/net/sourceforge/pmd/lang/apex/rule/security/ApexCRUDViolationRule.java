@@ -327,7 +327,7 @@ public class ApexCRUDViolationRule extends AbstractApexRule {
 
     @Override
     public Object visit(final ASTAssignmentExpression node, Object data) {
-        final ASTSoqlExpression soql = node.firstChild(ASTSoqlExpression.class);
+        final ASTSoqlExpression soql = node.descendants(ASTSoqlExpression.class).first();
         if (soql != null) {
             checkForAccessibility(soql, data);
         }
@@ -340,7 +340,7 @@ public class ApexCRUDViolationRule extends AbstractApexRule {
         String type = node.getType();
         addVariableToMapping(Helper.getFQVariableName(node), type);
 
-        final ASTSoqlExpression soql = node.firstChild(ASTSoqlExpression.class);
+        final ASTSoqlExpression soql = node.descendants(ASTSoqlExpression.class).first();
         if (soql != null) {
             checkForAccessibility(soql, data);
         }
@@ -363,7 +363,7 @@ public class ApexCRUDViolationRule extends AbstractApexRule {
             String namesString = field.getTypeName();
             addVariableToMapping(Helper.getFQVariableName(node), namesString);
         }
-        final ASTSoqlExpression soql = node.firstChild(ASTSoqlExpression.class);
+        final ASTSoqlExpression soql = node.descendants(ASTSoqlExpression.class).first();
         if (soql != null) {
             checkForAccessibility(soql, data);
         }
@@ -373,7 +373,7 @@ public class ApexCRUDViolationRule extends AbstractApexRule {
 
     @Override
     public Object visit(final ASTReturnStatement node, Object data) {
-        final ASTSoqlExpression soql = node.firstChild(ASTSoqlExpression.class);
+        final ASTSoqlExpression soql = node.descendants(ASTSoqlExpression.class).first();
         if (soql != null) {
             checkForAccessibility(soql, data);
         }
@@ -823,9 +823,30 @@ public class ApexCRUDViolationRule extends AbstractApexRule {
                     StringBuilder typeCheck = new StringBuilder().append(variableDeclFor.getDefiningType())
                             .append(":").append(type);
 
-                    validateCRUDCheckPresent(node, data, ANY, typeCheck.toString());
+                    violationAdded = validateCRUDCheckPresent(node, data, ANY, typeCheck.toString());
                 }
 
+            } else {
+                for (String typeFromSOQL : typesFromSOQL) {
+                    violationAdded |= validateCRUDCheckPresent(node, data, ANY, typeFromSOQL);
+                }
+            }
+        }
+
+        // If the node's already in violation, we don't need to keep checking.
+        if (violationAdded) {
+            return;
+        }
+
+        final ASTFieldDeclarationStatements fieldDeclarationStatements = node.ancestors(ASTFieldDeclarationStatements.class).first();
+        if (fieldDeclarationStatements != null) {
+            String type = fieldDeclarationStatements.getTypeName();
+            type = getSimpleType(type);
+            StringBuilder typeCheck = new StringBuilder().append(fieldDeclarationStatements.getDefiningType())
+                    .append(":").append(type);
+
+            if (typesFromSOQL.isEmpty()) {
+                validateCRUDCheckPresent(node, data, ANY, typeCheck.toString());
             } else {
                 for (String typeFromSOQL : typesFromSOQL) {
                     validateCRUDCheckPresent(node, data, ANY, typeFromSOQL);

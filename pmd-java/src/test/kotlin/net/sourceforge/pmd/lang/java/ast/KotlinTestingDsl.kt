@@ -8,13 +8,17 @@ import com.github.oowekyala.treeutils.matchers.baseShouldMatchSubtree
 import com.github.oowekyala.treeutils.printers.KotlintestBeanTreePrinter
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.scopes.AbstractContainerScope
+import io.kotest.core.test.NestedTest
 import io.kotest.core.test.TestScope
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
 import io.kotest.matchers.collections.shouldContainAll
-import net.sourceforge.pmd.lang.ast.*
+import net.sourceforge.pmd.lang.ast.LexException
+import net.sourceforge.pmd.lang.ast.Node
+import net.sourceforge.pmd.lang.ast.ParseException
 import net.sourceforge.pmd.lang.java.JavaParsingHelper
 import net.sourceforge.pmd.lang.java.JavaParsingHelper.*
+import net.sourceforge.pmd.lang.java.ast.JavaVersion.values
 import net.sourceforge.pmd.lang.test.ast.*
 import java.beans.PropertyDescriptor
 import java.io.PrintStream
@@ -34,8 +38,10 @@ enum class JavaVersion : Comparable<JavaVersion> {
     J18,
     J19,
     J20,
-    J21, J21__PREVIEW,
-    J22, J22__PREVIEW;
+    J21,
+    J22,
+    J23, J23__PREVIEW,
+    J24, J24__PREVIEW;
 
     /** Name suitable for use with e.g. [JavaParsingHelper.parse] */
     val pmdName: String = name.removePrefix("J").replaceFirst("__", "-").replace('_', '.').lowercase()
@@ -65,6 +71,9 @@ enum class JavaVersion : Comparable<JavaVersion> {
                 values().toList() - v1 - versions.toSet()
 
         fun except(versions: List<JavaVersion>) = values().toList() - versions.toSet()
+
+        /** Up to and including parameter. */
+        fun until(v: JavaVersion) = Earliest.rangeTo(v)
     }
 }
 
@@ -183,7 +192,8 @@ open class ParserTestCtx(testScope: TestScope,
                          val importedTypes: MutableList<Class<*>> = mutableListOf(),
                          val otherImports: MutableList<String> = mutableListOf(),
                          var packageName: String = "",
-                         var genClassHeader: String = "class Foo"): AbstractContainerScope(testScope) {
+                         var genClassHeader: String = "class Foo",
+                         private var registeredTestCases: Int = 0): AbstractContainerScope(testScope) {
 
     var parser: JavaParsingHelper = javaVersion.parser.withProcessing(false)
         private set
@@ -272,8 +282,13 @@ open class ParserTestCtx(testScope: TestScope,
                     "Expected '$value' not to parse in ${nodeParsingCtx.toString().addArticle()}"
                 }
             )
-
         }
     }
 
+    override suspend fun registerTestCase(nested: NestedTest) {
+        registeredTestCases++
+        super.registerTestCase(nested)
+    }
+
+    fun hasMoreThanOneChild() : Boolean = registeredTestCases > 1
 }

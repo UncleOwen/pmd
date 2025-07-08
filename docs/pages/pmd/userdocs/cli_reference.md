@@ -5,6 +5,7 @@ tags: [userdocs]
 keywords: [command, line, options, help, formats, renderers]
 permalink: pmd_userdocs_cli_reference.html
 author: Tom Copeland <tom@infoether.com>, Xavier Le Vourch <xlv@users.sourceforge.net>, Juan Martín Sotuyo Dodero <juansotuyo@gmail.com>
+last_updated: May 2025 (7.14.0)
 ---
 
 
@@ -19,7 +20,6 @@ The tool comes with a rather extensive help text, simply running with `--help`!
         <th>Default value</th>
         <th>Applies to</th>
     </tr>
-
     {% include custom/cli_option_row.html options="--rulesets,-R"
                option_arg="refs"
                description="Path to a ruleset xml file. The path may reference
@@ -29,17 +29,6 @@ The tool comes with a rather extensive help text, simply running with `--help`!
                               by comma can be provided to a single occurrence
                               of the option."
                required="yes"
-    %}
-    {% include custom/cli_option_row.html options="--dir,-d"
-               option_arg="path"
-               description="Path to a source file, or directory containing
-                              source files to analyze. Zip and Jar files are
-                              also supported, if they are specified directly
-                              (archive files found while exploring a directory
-                              are not recursively expanded). This option can be
-                              repeated, and multiple arguments can be provided
-                              to a single occurrence of the option. One of
-                              `--dir`, `--file-list` or `--uri` must be provided."
     %}
     {% include custom/cli_option_row.html options="--format,-f"
                option_arg="format"
@@ -55,7 +44,6 @@ The tool comes with a rather extensive help text, simply running with `--help`!
                (\":\" on Linux, \";\" on Windows) is used to separate the entries.
                Alternatively, a single `file:` URL
                to a text file containing path elements on consecutive lines can be specified.
-
                <p>See also [Providing the auxiliary classpath](pmd_languages_java.html#providing-the-auxiliary-classpath).</p>"
                languages="Java"
     %}
@@ -74,22 +62,15 @@ The tool comes with a rather extensive help text, simply running with `--help`!
     {% include custom/cli_option_row.html options="--debug,--verbose,-D,-v"
                description="Debug mode. Prints more log output. See also [Logging](#logging)."
     %}
-    {% include custom/cli_option_row.html options="--encoding,-e"
-               option_arg="charset"
-               description="Specifies the character set encoding of the source code files PMD is reading.
-                            The valid values are the standard character sets of `java.nio.charset.Charset`."
-               default="UTF-8"
+    {% include custom/cli_option_row.html options="--[no-]fail-on-error"
+               description="Specifies whether PMD exits with non-zero status if recoverable errors occurred.
+                            By default PMD exits with status 5 if recoverable errors occurred (whether there are violations or not).
+                            Disable this option with `--no-fail-on-error` to exit with 0 instead. In any case, a report with the found violations will be written."
     %}
     {% include custom/cli_option_row.html options="--[no-]fail-on-violation"
                description="Specifies whether PMD exits with non-zero status if violations are found.
                             By default PMD exits with status 4 if violations are found.
-                            Disable this feature with `--no-fail-on-violation` to exit with 0 instead and just output the report."
-    %}
-    {% include custom/cli_option_row.html options="--file-list"
-               option_arg="filepath"
-               description="Path to a file containing a list of files to
-                              analyze, one path per line. One of `--dir`,
-                              `--file-list` or `--uri` must be provided."
+                            Disable this feature with `--no-fail-on-violation` to exit with 0 instead. In any case a report with the found violations will be written."
     %}
     {% include custom/cli_option_row.html options="--force-language"
                option_arg="lang"
@@ -98,16 +79,9 @@ The tool comes with a rather extensive help text, simply running with `--help`!
                             by extension is disabled and PMD tries to parse all files with
                             the given language `&lt;lang&gt;`. Parsing errors are ignored and unparsable files
                             are skipped.
-                            
                             <p>Use `--use-version` to specify the language version to use, if it is not the default.</p>
-
                             <p>This option allows to use the xml language for files, that don't
                             use xml as extension. See [example](#analyze-other-xml-formats) below.</p>"
-    %}
-    {% include custom/cli_option_row.html options="--ignore-list"
-               option_arg="filepath"
-               description="Path to file containing a list of files to ignore, one path per line.
-                            This option overrides files included by any of `--dir`, `--file-list` and `--uri`."
     %}
     {% include custom/cli_option_row.html options="--help,-h"
                description="Display help on usage."
@@ -125,7 +99,7 @@ The tool comes with a rather extensive help text, simply running with `--help`!
     {% include custom/cli_option_row.html options="--minimum-priority"
                option_arg="priority"
                description="Rule priority threshold; rules with lower priority than configured here won't be used.
-                            Valid values (case insensitive): High, Medium_High, Medium, Medium_Low, Low.
+                            Valid values (case-insensitive): High, Medium_High, Medium, Medium_Low, Low.
                             An integer between 1 (High) and 5 (Low) is also supported. See [Configuring rules](pmd_userdocs_configuring_rules.html)
                             on how to override priorities in custom rulesets."
                default="Low"
@@ -141,23 +115,16 @@ The tool comes with a rather extensive help text, simply running with `--help`!
                description="Enables / disable progress bar indicator of live analysis progress. This ie enabled by default."
     %}
     {% include custom/cli_option_row.html options="--property,-P"
-               option_arg="name>=<value"
+               option_arg="name&gt;=&lt;value"
                description="Specifies a property for the report renderer. The option can be specified several times.
                            <p>Using `--help` will provide a complete list of supported properties for each report format</p>"
-    %}
-    {% include custom/cli_option_row.html options="--relativize-paths-with,-z"
-               option_arg="path"
-               description="Path relative to which directories are rendered in the report. This option allows
-                    shortening directories in the report; without it, paths are rendered as mentioned in the source directory (option \"--dir\").
-                    The option can be repeated, in which case the shortest relative path will be used.
-                    If the root path is mentioned (e.g. \"/\" or \"C:\\\"), then the paths will be rendered as absolute."
     %}
     {% include custom/cli_option_row.html options="--report-file,-r"
                option_arg="path"
                description="Path to a file to which report output is written. The file is created if it does not exist. If this option is not specified, the report is rendered to standard output."
     %}
     {% include custom/cli_option_row.html options="--show-suppressed"
-               description="Causes the suppressed rule violations to be added to the report."
+               description="Causes the suppressed rule violations to be added to the report if supported by the report format. See [PMD Report formats](pmd_userdocs_report_formats.html) for details."
     %}
     {% include custom/cli_option_row.html options="--suppress-marker"
                option_arg="marker"
@@ -166,16 +133,93 @@ The tool comes with a rather extensive help text, simply running with `--help`!
     %}
     {% include custom/cli_option_row.html options="--threads,-t"
                option_arg="num"
-               description="Sets the number of threads used by PMD.
-                            Set threads to `0` to disable multi-threading processing."
-               default="1"
+               description="Set the number of threads used by PMD. This can be an integer, or a float (or int) followed by the letter `C`, eg `0.5C` or `1C`. 
+                    In the latter case, the float will be multiplied by the number of cores of the host machine, and rounded down to an integer. 
+                    If the specified number of threads is zero, then PMD will use the main thread for everything. If it is `n` > 0, 
+                    PMD will spawn `n` separate analysis threads besides the main thread."
+               default="1C"
+    %}
+</table>
+
+### File collection options
+
+PMD and CPD use the same set of options to specify the files that are to be
+processed by the analyzer. There are different ways to specify files, but at
+least one of `--dir`, `--file-list` or `--uri` must be provided.
+
+<table>
+    <tr>
+        <th>Option</th>
+        <th>Description</th>
+        <th>Default value</th>
+        <th>Applies to</th>
+    </tr>
+    {% include custom/cli_option_row.html options="--dir,-d"
+               option_arg="path"
+               description="Path to a source file, or directory containing
+                              source files to analyze. Zip and Jar files are
+                              also supported, if they are specified directly
+                              (archive files found while exploring a directory
+                              are not recursively expanded). This option can be
+                              repeated, and multiple arguments can be provided
+                              to a single occurrence of the option. One of
+                              `--dir`, `--file-list` or `--uri` must be provided."
+    %}
+    {% include custom/cli_option_row.html options="--file-list"
+               option_arg="filepath"
+               description="Path to a file containing a list of files to
+                              analyze, one path per line. One of `--dir`,
+                              `--file-list` or `--uri` must be provided."
+    %}
+    {% include custom/cli_option_row.html options="--exclude"
+               option_arg="filepath+"
+               description="Specify one or more paths to files that will be ignored.
+                            This option overrides files included by any of `--dir`, `--file-list` and `--uri`.
+                            It can combine with `--exclude-file-list`.
+                            Available for PMD since 7.14.0, for CPD since 7.0.0."
+    %}
+    {% include custom/cli_option_row.html options="--exclude-file-list"
+               option_arg="filepath"
+               description="Path to a file containing a list of files to ignore, one path per line.
+                            This option overrides files included by any of `--dir`, `--file-list` and `--uri`.
+                            It can combine with `--exclude`.
+                            Available for PMD since 7.14.0, for CPD since 7.14.0.
+                            For PMD, this option was called `--ignore-list`."
+    %}
+    {% include custom/cli_option_row.html options="--ignore-list"
+               option_arg="filepath"
+               description="<span class='label label-primary'>Deprecated (Since 7.14.0)</span>
+                            This option has been renamed `--exclude-file-list`.
+                            Path to file containing a list of files to ignore, one path per line.
+                            This option overrides files included by any of `--dir`, `--file-list` and `--uri`.
+                            It can combine with `--exclude`."
+    %}
+    {% include custom/cli_option_row.html options="--non-recursive"
+               description="When specified, any directory mentioned with `--dir` or in the `--file-list` will only be searched for files that are direct children.
+                            By default, subdirectories are recursively included.
+                            Available for PMD since 7.14.0, for CPD since 7.0.0."
+    %}
+    {% include custom/cli_option_row.html options="--relativize-paths-with,-z"
+               option_arg="path"
+               description="Path relative to which directories are rendered in the report. This option allows
+                    shortening directories in the report; without it, paths are rendered as mentioned in the source directory (option \"--dir\").
+                    The option can be repeated, in which case the shortest relative path will be used.
+                    If the root path is mentioned (e.g. \"/\" or \"C:\\\"), then the paths will be rendered as absolute."
     %}
     {% include custom/cli_option_row.html options="--uri,-u"
                    option_arg="uri"
                    description="Database URI for sources.  One of `--dir`, `--file-list` or `--uri` must be provided."
                    languages="PLSQL"
     %}
+    {% include custom/cli_option_row.html options="--encoding,-e"
+               option_arg="charset"
+               description="Specifies the character set encoding of the source code files the tool is reading.
+                            The valid values are the standard character sets of `java.nio.charset.Charset`."
+               default="UTF-8"
+    %}
 </table>
+
+
 
 ## Additional Java Runtime Options
 
@@ -208,15 +252,22 @@ Or you can set the environment variable `CLASSPATH` before starting PMD, e.g.
 
 ## Exit Status
 
-Please note that if PMD detects any violations, it will exit with status 4 (since 5.3).
+Please note that if PMD detects any violations, it will exit with status 4 (since 5.3) or 5 (since 7.3.0).
 This behavior has been introduced to ease PMD integration into scripts or hooks, such as SVN hooks.
 
 <table>
-<tr><td>0</td><td>Everything is fine, no violations found.</td></tr>
+<tr><td>0</td><td>Everything is fine, no violations found and no recoverable error occurred.</td></tr>
 <tr><td>1</td><td>PMD exited with an exception.</td></tr>
 <tr><td>2</td><td>Usage error. Command-line parameters are invalid or missing.</td></tr>
-<tr><td>4</td><td>At least one violation has been detected, unless <code>--no-fail-on-violation</code> is set.</td></tr>
+<tr><td>4</td><td>At least one violation has been detected, unless <code>--no-fail-on-violation</code> is set.<p>Since PMD 5.3.</p></td></tr>
+<tr><td>5</td><td>At least one recoverable error has occurred. There might be additionally zero or more violations detected.
+    To ignore recoverable errors, use <code>--no-fail-on-error</code>.<p>Since PMD 7.3.0.</p></td></tr>
 </table>
+
+{%include note.html content="If PMD exits with 5, then PMD had either trouble parsing one or more files or a rule failed with an exception.
+That means, that either no violations for the entire file or for that rule are reported. These cases can be considered as false-negatives.
+In any case, the root cause should be investigated. If it's a problem in PMD itself, please create a bug report. Recoverable errors
+are usually part of the generated PMD report." %}
 
 ## Logging
 

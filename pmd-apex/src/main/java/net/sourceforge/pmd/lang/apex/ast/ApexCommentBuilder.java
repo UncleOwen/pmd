@@ -8,20 +8,27 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.RandomAccess;
 
+import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.Token;
 
 import net.sourceforge.pmd.annotation.InternalApi;
+import net.sourceforge.pmd.lang.ast.LexException;
+import net.sourceforge.pmd.lang.ast.impl.SuppressionCommentImpl;
+import net.sourceforge.pmd.lang.document.FileLocation;
 import net.sourceforge.pmd.lang.document.TextDocument;
 import net.sourceforge.pmd.lang.document.TextRegion;
+import net.sourceforge.pmd.reporting.ViolationSuppressor.SuppressionCommentWrapper;
 
-import com.nawforce.apexparser.ApexLexer;
+import io.github.apexdevtools.apexparser.ApexLexer;
+import io.github.apexdevtools.apexparser.CaseInsensitiveInputStream;
 
 @InternalApi
 final class ApexCommentBuilder {
@@ -103,10 +110,18 @@ final class ApexCommentBuilder {
     }
 
     private static CommentInformation extractInformationFromComments(TextDocument sourceCode, String suppressMarker) {
-        ApexLexer lexer = new ApexLexer(CharStreams.fromString(sourceCode.getText().toString()));
+        String source = sourceCode.getText().toString();
+        ApexLexer lexer = new ApexLexer(new CaseInsensitiveInputStream(CharStreams.fromString(source)));
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(new BaseErrorListener() {
+            @Override
+            public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+                throw new LexException(line, charPositionInLine, sourceCode.getFileId(), msg, e);
+            }
+        });
 
         List<Token> allCommentTokens = new ArrayList<>();
-        Map<Integer, String> suppressMap = new HashMap<>();
+        List<SuppressionCommentWrapper> suppressionComments = new ArrayList<>();
         int lastStartIndex = -1;
         Token token = lexer.nextToken();
 
@@ -126,7 +141,12 @@ final class ApexCommentBuilder {
 
                 if (trimmedCommentText.startsWith(suppressMarker)) {
                     String userMessage = trimmedCommentText.substring(suppressMarker.length()).trim();
-                    suppressMap.put(token.getLine(), userMessage);
+                    FileLocation loc = FileLocation.caret(
+                        sourceCode.getFileId(),
+                        token.getLine(),
+                        token.getCharPositionInLine() + 1
+                    );
+                    suppressionComments.add(new SuppressionCommentImpl<>(() -> loc, userMessage));
                 }
             }
 
@@ -134,17 +154,17 @@ final class ApexCommentBuilder {
             token = lexer.nextToken();
         }
 
-        return new CommentInformation(suppressMap, allCommentTokens);
+        return new CommentInformation(suppressionComments, allCommentTokens);
     }
 
     private static class CommentInformation {
 
-        final Map<Integer, String> suppressMap;
+        final Collection<SuppressionCommentWrapper> suppressionComments;
         final List<Integer> allCommentsByStartIndex;
         final List<ApexDocToken> docTokens;
 
-        CommentInformation(Map<Integer, String> suppressMap, List<Token> allCommentTokens) {
-            this.suppressMap = suppressMap;
+        CommentInformation(Collection<SuppressionCommentWrapper> suppressMap, List<Token> allCommentTokens) {
+            this.suppressionComments = suppressMap;
             this.docTokens = allCommentTokens.stream()
                 .filter(token -> token.getType() == ApexLexer.DOC_COMMENT)
                 .map(ApexDocToken::new)
@@ -188,7 +208,7 @@ final class ApexCommentBuilder {
         }
     }
 
-    public Map<Integer, String> getSuppressMap() {
-        return commentInfo.suppressMap;
+    public Collection<SuppressionCommentWrapper> getSuppressMap() {
+        return commentInfo.suppressionComments;
     }
 }

@@ -10,6 +10,7 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.RecordComponentVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.TypePath;
 import org.objectweb.asm.TypeReference;
@@ -28,6 +29,7 @@ class ClassStubBuilder extends ClassVisitor {
     private final String myInternalName;
     private final AsmSymbolResolver resolver;
 
+    private boolean isAnonOrLocalClass = false;
     private boolean isInnerNonStaticClass = false;
 
     ClassStubBuilder(ClassStub stub, AsmSymbolResolver resolver) {
@@ -48,12 +50,35 @@ class ClassStubBuilder extends ClassVisitor {
         return new AnnotationBuilderVisitor(myStub, resolver, visible, descriptor);
     }
 
+
+    @Override
+    public RecordComponentVisitor visitRecordComponent(String name, String descriptor, String signature) {
+        RecordComponentStub componentStub = new RecordComponentStub(myStub, name, descriptor, signature);
+        myStub.addRecordComponent(componentStub);
+        return new RecordComponentVisitor(api) {
+            @Override
+            public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+                return new AnnotationBuilderVisitor(componentStub, resolver, visible, descriptor);
+            }
+
+            @Override
+            public AnnotationVisitor visitTypeAnnotation(int typeRef, @Nullable TypePath typePath, String descriptor, boolean visible) {
+                assert new TypeReference(typeRef).getSort() == TypeReference.FIELD : typeRef;
+                return new AnnotationBuilderVisitor.TypeAnnotBuilderImpl(resolver, componentStub, typeRef, typePath, visible, descriptor);
+            }
+
+        };
+    }
+
+
+    // called only if this is local or anonymous class
     @Override
     public void visitOuterClass(String ownerInternalName, @Nullable String methodName, @Nullable String methodDescriptor) {
+        isAnonOrLocalClass = true;
         isInnerNonStaticClass = true;
         // only for enclosing method
         ClassStub outer = resolver.resolveFromInternalNameCannotFail(ownerInternalName);
-        myStub.setOuterClass(outer, methodName, methodDescriptor);
+        myStub.setEnclosingInfo(outer, true, methodName, methodDescriptor);
     }
 
     @Override
@@ -72,6 +97,12 @@ class ClassStubBuilder extends ClassVisitor {
                 return new AnnotationBuilderVisitor.TypeAnnotBuilderImpl(resolver, field, typeRef, typePath, visible, descriptor);
             }
         };
+    }
+
+    @Override
+    public void visitPermittedSubclass(String permittedSubclass) {
+        ClassStub permitted = resolver.resolveFromInternalNameCannotFail(permittedSubclass);
+        myStub.addPermittedSubclass(permitted);
     }
 
     /**
@@ -95,13 +126,15 @@ class ClassStubBuilder extends ClassVisitor {
             member.setSimpleName(innerSimpleName);
             member.setModifiers(access, false);
             myStub.addMemberClass(member);
-        } else if (myInternalName.equals(innerInternalName) && outerName != null) {
+        } else if (myInternalName.equals(innerInternalName)) {
             // then it's specifying the enclosing class
             // (myStub is the inner class)
-            ClassStub outer = resolver.resolveFromInternalNameCannotFail(outerName);
-            myStub.setSimpleName(innerSimpleName);
+            if (outerName != null) {
+                ClassStub outer = resolver.resolveFromInternalNameCannotFail(outerName);
+                myStub.setEnclosingInfo(outer, this.isAnonOrLocalClass, null, null);
+            }
+            myStub.setSimpleName(innerSimpleName == null ? "" : innerSimpleName); // may be null for anonymous
             myStub.setModifiers(access, false);
-            myStub.setOuterClass(outer, null, null);
             isInnerNonStaticClass = (Opcodes.ACC_STATIC & access) == 0;
         }
     }

@@ -17,7 +17,6 @@ import net.sourceforge.pmd.lang.ast.NodeStream;
  * uniform names on related concepts. Maybe it makes sense to publish some of
  * them at some point.
  */
-@SuppressWarnings("PMD.MissingStaticMethodInNonInstantiatableClass")
 final class InternalInterfaces {
 
     private InternalInterfaces() {
@@ -134,7 +133,7 @@ final class InternalInterfaces {
         ASTVariableId getVarId();
     }
 
-    interface MultiVariableIdOwner extends JavaNode, Iterable<ASTVariableId>, ModifierOwner {
+    interface MultiVariableIdOwner extends Iterable<ASTVariableId>, ModifierOwner {
 
         /**
          * Returns a stream of the variable ids declared

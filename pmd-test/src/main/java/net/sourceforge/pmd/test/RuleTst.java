@@ -12,6 +12,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,6 +31,7 @@ import org.xml.sax.InputSource;
 
 import net.sourceforge.pmd.PMDConfiguration;
 import net.sourceforge.pmd.PmdAnalysis;
+import net.sourceforge.pmd.internal.util.ClasspathClassLoader;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.document.TextFile;
@@ -51,7 +57,16 @@ public abstract class RuleTst {
         // This method is intended to be overridden by subclasses.
     }
 
+    /**
+     * Return the rules that will be tested. Each rule must have a corresponding XML file containing a test collection.
+     * Test collections for all these rules are run separately.
+     */
     protected List<Rule> getRules() {
+        return Collections.emptyList();
+    }
+
+    /** Return extra rules that will be run while running the tests. */
+    protected Collection<? extends Rule> getExtraRules() {
         return Collections.emptyList();
     }
 
@@ -85,9 +100,9 @@ public abstract class RuleTst {
         rule = reinitializeRule(rule);
 
         Map<PropertyDescriptor<?>, Object> oldProperties = rule.getPropertiesByPropertyDescriptor();
+        Report report = null;
         try {
             int res;
-            Report report;
             try {
                 // Set test specific properties onto the Rule
                 if (test.getProperties() != null) {
@@ -115,13 +130,14 @@ public abstract class RuleTst {
                 e.printStackTrace();
                 throw new RuntimeException('"' + test.getDescription() + "\" failed", e);
             }
-            if (test.getExpectedProblems() != res) {
-                printReport(test, report);
-            }
             assertEquals(test.getExpectedProblems(), res,
-                         '"' + test.getDescription() + "\" resulted in wrong number of failures,");
+                    '"' + test.getDescription() + "\" resulted in wrong number of failures,");
             assertMessages(report, test);
             assertLineNumbers(report, test);
+            assertSuppressions(report, test);
+        } catch (AssertionError e) {
+            printReport(test, report);
+            throw e;
         } finally {
             // Restore old properties
             for (Map.Entry<PropertyDescriptor<?>, Object> entry : oldProperties.entrySet()) {
@@ -142,6 +158,21 @@ public abstract class RuleTst {
         return rule.deepCopy();
     }
 
+    private void assertSuppressions(Report report, RuleTestDescriptor test) {
+        if (!test.hasExpectedSuppressions()) {
+            return;
+        }
+        List<RuleTestDescriptor.SuppressionDescriptor> expectedSuppressions = test.getExpectedSuppressions();
+        assertEquals(expectedSuppressions.size(), report.getSuppressedViolations().size(), "wrong number of suppressed violations");
+        for (int i = 0; i < expectedSuppressions.size(); i++) {
+            RuleTestDescriptor.SuppressionDescriptor expectedSuppression = expectedSuppressions.get(i);
+            Report.SuppressedViolation actualSuppression = report.getSuppressedViolations().get(i);
+            assertEquals(expectedSuppression.getLine(), actualSuppression.getRuleViolation().getBeginLine(), "wrong line for suppression");
+            if (StringUtils.isNotBlank(expectedSuppression.getSuppressorId())) {
+                assertEquals(expectedSuppression.getSuppressorId(), actualSuppression.getSuppressor().getId(), "wrong suppressor id");
+            }
+        }
+    }
 
     private void assertMessages(Report report, RuleTestDescriptor test) {
         if (report == null || test.getExpectedMessages().isEmpty()) {
@@ -157,9 +188,6 @@ public abstract class RuleTst {
         int index = 0;
         for (RuleViolation violation : report.getViolations()) {
             String actual = violation.getDescription();
-            if (!expectedMessages.get(index).equals(actual)) {
-                printReport(test, report);
-            }
             assertEquals(expectedMessages.get(index), actual,
                          '"' + test.getDescription() + "\" produced wrong message on violation number " + (index + 1)
                              + ".");
@@ -173,6 +201,7 @@ public abstract class RuleTst {
         }
 
         List<Integer> expected = test.getExpectedLineNumbers();
+        List<Integer> expectedEndLines = test.getExpectedEndLineNumbers();
         if (report.getViolations().size() != expected.size()) {
             throw new RuntimeException("Test setup error: number of expected line numbers " + expected.size()
                                            + " doesn't match number of violations " + report.getViolations().size()
@@ -182,25 +211,45 @@ public abstract class RuleTst {
 
         int index = 0;
         for (RuleViolation violation : report.getViolations()) {
-            Integer actual = violation.getBeginLine();
-            if (expected.get(index) != actual.intValue()) {
-                printReport(test, report);
-            }
-            assertEquals(expected.get(index), actual,
+            Integer actualBeginLine = violation.getBeginLine();
+            Integer actualEndLine = violation.getEndLine();
+
+            assertEquals(expected.get(index), actualBeginLine,
                          '"' + test.getDescription() + "\" violation on wrong line number: violation number "
                              + (index + 1) + ".");
+            if (!expectedEndLines.isEmpty()) {
+                assertEquals(expectedEndLines.get(index), actualEndLine,
+                        '"' + test.getDescription() + "\" violation on wrong end line number: violation number "
+                            + (index + 1) + ".");
+            }
             index++;
         }
     }
 
     private void printReport(RuleTestDescriptor test, Report report) {
-        System.out.println("--------------------------------------------------------------");
+        final String separator = "--------------------------------------------------------------";
+
+        System.out.println(separator);
         System.out.println("Test Failure: " + test.getDescription());
+
+        if (report == null) {
+            System.out.println("There is no report!");
+            System.out.println(separator);
+            return;
+        }
+
         System.out.println(
             " -> Expected " + test.getExpectedProblems() + " problem(s), " + report.getViolations().size()
                 + " problem(s) found.");
         System.out.println(" -> Expected messages: " + test.getExpectedMessages());
-        System.out.println(" -> Expected line numbers: " + test.getExpectedLineNumbers());
+        System.out.println(" -> Expected begin line numbers: " + test.getExpectedLineNumbers());
+        if (!test.getExpectedEndLineNumbers().isEmpty()) {
+            System.out.println(" -> Expected   end line numbers: " + test.getExpectedEndLineNumbers());
+        }
+        if (test.hasExpectedSuppressions()) {
+            System.out.println(" -> Expected " + test.getExpectedSuppressions().size() + " suppression(s), "
+                    + report.getSuppressedViolations().size() + " found.");
+        }
         System.out.println();
         StringWriter reportOutput = new StringWriter();
         TextRenderer renderer = new TextRenderer();
@@ -213,11 +262,39 @@ public abstract class RuleTst {
             throw new RuntimeException(e);
         }
         System.out.println(reportOutput);
-        System.out.println("--------------------------------------------------------------");
+        System.out.println(separator);
     }
 
     private Report processUsingStringReader(RuleTestDescriptor test, Rule rule) {
         return runTestFromString(test.getCode(), rule, test.getLanguageVersion());
+    }
+
+    private static final ClassLoader TEST_AUXCLASSPATH_CLASSLOADER;
+
+    static {
+        final Path PATH_TO_JRT_FS_JAR;
+        // find jrt-fs.jar to be added to auxclasspath
+        // Similar logic like jdk.internal.jrtfs.SystemImage
+        CodeSource codeSource = Object.class.getProtectionDomain().getCodeSource();
+        if (codeSource == null) {
+            PATH_TO_JRT_FS_JAR = Paths.get(System.getProperty("java.home"), "lib", "jrt-fs.jar");
+        } else {
+            URL location = codeSource.getLocation();
+            if (!"file".equalsIgnoreCase(location.getProtocol())) {
+                throw new IllegalStateException("Object.class loaded in unexpected way from " + location);
+            }
+            try {
+                PATH_TO_JRT_FS_JAR = Paths.get(location.toURI());
+            } catch (URISyntaxException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        try {
+            TEST_AUXCLASSPATH_CLASSLOADER = new ClasspathClassLoader(PATH_TO_JRT_FS_JAR.toString(), PMDConfiguration.class.getClassLoader());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -228,10 +305,14 @@ public abstract class RuleTst {
         configuration.setIgnoreIncrementalAnalysis(true);
         configuration.setDefaultLanguageVersion(languageVersion);
         configuration.setThreads(0); // don't use separate threads
-        configuration.prependAuxClasspath(".");
+        configuration.setClassLoader(TEST_AUXCLASSPATH_CLASSLOADER);
 
         try (PmdAnalysis pmd = PmdAnalysis.create(configuration)) {
             pmd.files().addFile(TextFile.forCharSeq(code, FileId.fromPathLikeString("file"), languageVersion));
+            Collection<? extends Rule> extraRules = getExtraRules();
+            if (!extraRules.isEmpty()) {
+                pmd.addRuleSet(RuleSet.create("extra rules", "description", "file.xml", Collections.emptyList(), Collections.emptyList(), extraRules));
+            }
             pmd.addRuleSet(RuleSet.forSingleRule(rule));
             pmd.addListener(GlobalAnalysisListener.exceptionThrower());
             return pmd.performAnalysisAndCollectReport();
@@ -257,7 +338,7 @@ public abstract class RuleTst {
     /**
      * Extract a set of tests from an XML file. The file should be
      * ./xml/RuleName.xml relative to the test class. The format is defined in
-     * rule-tests_1_0_0.xsd in pmd-test-schema.
+     * rule-tests_1_1_0.xsd in pmd-test-schema.
      */
     RuleTestCollection parseTestCollection(Rule rule) {
         String testsFileName = getCleanRuleName(rule);

@@ -44,7 +44,39 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
         val resourcePrefix: String,
         val languageRegistry: LanguageRegistry = LanguageRegistry.PMD,
         val suppressMarker: String = PMDConfiguration.DEFAULT_SUPPRESS_MARKER,
+        val configLanguageProperties: LanguagePropertyBundle.() -> Unit = {}
     ) {
+
+        @Deprecated("Overload added for binary compatibility")
+        constructor(
+            doProcess: Boolean,
+            defaultVerString: String?,
+            resourceLoader: Class<*>?,
+            resourcePrefix: String,
+            languageRegistry: LanguageRegistry,
+            suppressMarker: String,
+        ) : this(
+            doProcess,
+            defaultVerString,
+            resourceLoader,
+            resourcePrefix,
+            languageRegistry,
+            suppressMarker,
+            configLanguageProperties = {})
+
+        @Deprecated("Overload added for binary compatibility")
+        fun copy(
+            doProcess: Boolean,
+            defaultVerString: String?,
+            resourceLoader: Class<*>?,
+            resourcePrefix: String,
+            languageRegistry: LanguageRegistry = LanguageRegistry.PMD,
+            suppressMarker: String = PMDConfiguration.DEFAULT_SUPPRESS_MARKER,
+        ) = copy(
+            doProcess, defaultVerString, resourceLoader, resourcePrefix, languageRegistry, suppressMarker,
+            configLanguageProperties
+        )
+
         companion object {
 
             @JvmStatic
@@ -112,6 +144,10 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
             clone(params.copy(suppressMarker = marker))
 
 
+    fun withLanguageProperties(configFun: LanguagePropertyBundle.() -> Unit): Self =
+        clone(params.copy(configLanguageProperties = configFun))
+
+
     @JvmOverloads
     fun <R : Node> getNodes(target: Class<R>, source: String, version: String? = null): List<R> =
                 parse(source, version).descendants(target).crossFindBoundaries(true).toList()
@@ -152,6 +188,7 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
         val props = language.newPropertyBundle().apply {
             setLanguageVersion(params.defaultVerString ?: defaultVersion.version)
             setProperty(LanguagePropertyBundle.SUPPRESS_MARKER, params.suppressMarker)
+            params.configLanguageProperties(this)
         }
         return language.createProcessor(props)
     }
@@ -184,7 +221,11 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
      */
     @JvmOverloads
     open fun parseClass(clazz: Class<*>, version: String? = null): T =
-            parse(readClassSource(clazz), version)
+        parseClass(clazz.name, version)
+
+    @JvmOverloads
+    open fun parseClass(binaryName: String, version: String? = null): T =
+        parse(readClassSource(binaryName), version)
 
     fun readResource(resourceName: String): String {
 
@@ -210,14 +251,15 @@ abstract class BaseParsingHelper<Self : BaseParsingHelper<Self, T>, T : RootNode
      *
      * @throws IllegalArgumentException if the source file wasn't found
      */
-    fun readClassSource(clazz: Class<*>): String {
-        var sourceFile = clazz.name.replace('.', '/') + ".java"
+    fun readClassSource(clazz: Class<*>): String = readClassSource(clazz.name)
+
+    fun readClassSource(binaryName: String): String {
         // Consider nested classes
-        if (clazz.name.contains("$")) {
-            sourceFile = sourceFile.substring(0, clazz.name.indexOf('$')) + ".java"
-        }
-        val input = (params.resourceLoader ?: javaClass).classLoader.getResourceAsStream(sourceFile)
-                ?: throw IllegalArgumentException("Unable to find source file $sourceFile for $clazz")
+        val outerName = binaryName.substringBefore('$')
+        val sourceFile = outerName.replace('.', '/') + ".java"
+
+        val input = resourceLoader.classLoader.getResourceAsStream(sourceFile)
+            ?: throw IllegalArgumentException("Unable to find source file $sourceFile for $binaryName")
 
         input.use {
             return consume(input)

@@ -13,8 +13,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.java.ast.ASTAssignableExpr.ASTNamedReferenceExpr;
+import net.sourceforge.pmd.lang.java.internal.JavaLanguageProcessor;
 import net.sourceforge.pmd.lang.java.symbols.JVariableSymbol;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
+import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
 
 // @formatter:off
 /**
@@ -43,7 +45,7 @@ import net.sourceforge.pmd.lang.java.types.JTypeMirror;
  * <p>Note: This node has been called ASTVariableDeclaratorId in PMD 6.
  */
 // @formatter:on
-public final class ASTVariableId extends AbstractTypedSymbolDeclarator<JVariableSymbol> implements ModifierOwner, SymbolDeclaratorNode {
+public final class ASTVariableId extends AbstractTypedSymbolDeclarator<JVariableSymbol> implements ModifierOwner {
 
     private String name;
     private List<ASTNamedReferenceExpr> usages = Collections.emptyList();
@@ -99,7 +101,7 @@ public final class ASTVariableId extends AbstractTypedSymbolDeclarator<JVariable
      * There may not be an explicit final modifier, e.g. for enum constants.
      */
     public boolean isFinal() {
-        return hasModifiers(JModifier.FINAL);
+        return hasModifiers(JModifier.FINAL) || isLombokVal(getTypeNode());
     }
 
     /**
@@ -125,6 +127,18 @@ public final class ASTVariableId extends AbstractTypedSymbolDeclarator<JVariable
             return (ModifierOwner) parent.getParent();
         }
         return (ModifierOwner) parent;
+    }
+
+    /**
+     * Return true if this variable has no name. The name is then equal to {@code "_"}.
+     * A variable declaration with this name does not actually declare a variable in
+     * the current scope, since Java 22. In Java 9 to 21, the identifier {@code _} is
+     * restricted and cannot be used to name a variable. Before Java 9, it is a regular
+     * identifier.
+     * @see <a href="https://openjdk.org/jeps/456">JEP 456: Unnamed Variables &amp; Patterns</a> (Java 22)
+     */
+    public boolean isUnnamed() {
+        return "_".equals(name) && getLanguageVersion().compareToVersion("22") >= 0;
     }
 
     /** Returns the name of the variable. */
@@ -249,7 +263,33 @@ public final class ASTVariableId extends AbstractTypedSymbolDeclarator<JVariable
      * since the type node is absent.
      */
     public boolean isTypeInferred() {
-        return getTypeNode() == null;
+        ASTType typeNode = getTypeNode();
+        return typeNode == null || isLombokValOrVar(typeNode, false);
+    }
+
+    static boolean isLombokVal(@Nullable ASTType typeNode) {
+        return isLombokValOrVar(typeNode, true);
+    }
+
+    private static boolean isLombokValOrVar(@Nullable ASTType typeNode, boolean onlyVal) {
+        if (!(typeNode instanceof ASTClassType)) {
+            return false;
+        }
+        String simpleName = ((ASTClassType) typeNode).getSimpleName();
+        if (!"val".equals(simpleName) && (onlyVal || !"var".equals(simpleName))) {
+            // do a first filter to avoid having to query the language processor
+            return false;
+        }
+        @SuppressWarnings("PMD.CloseResource")
+        JavaLanguageProcessor javaLanguage = (JavaLanguageProcessor) typeNode.getAstInfo().getLanguageProcessor();
+        if (!javaLanguage.hasFirstClassLombokSupport()) {
+            return false;
+        }
+        // Note that if language version is >= 10, then a variable cannot have
+        // type lombok.var unless it uses a qualified name. `var` is interpreted
+        // as a keyword by the parser and produces no type node.
+        return TypeTestUtil.isExactlyA("lombok.val", typeNode)
+            || !onlyVal && TypeTestUtil.isExactlyA("lombok.var", typeNode);
     }
 
     /**
@@ -325,7 +365,6 @@ public final class ASTVariableId extends AbstractTypedSymbolDeclarator<JVariable
      */
     // @formatter:on
     @Override
-    @SuppressWarnings("PMD.UselessOverridingMethod")
     public @NonNull JTypeMirror getTypeMirror() {
         return super.getTypeMirror();
     }

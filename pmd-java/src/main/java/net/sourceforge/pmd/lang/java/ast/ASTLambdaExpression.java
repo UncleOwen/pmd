@@ -21,7 +21,7 @@ import net.sourceforge.pmd.lang.java.types.JTypeMirror;
  *
  * </pre>
  */
-public final class ASTLambdaExpression extends AbstractJavaExpr implements FunctionalExpression {
+public final class ASTLambdaExpression extends AbstractJavaExpr implements FunctionalExpression, ReturnScopeNode {
 
     private JMethodSig functionalMethod;
 
@@ -64,6 +64,15 @@ public final class ASTLambdaExpression extends AbstractJavaExpr implements Funct
     }
 
 
+    /**
+     * Return true if this lambda is explicitly typed, meaning
+     * all parameters have an explicit type. Note that lambdas
+     * with zero parameters are explicitly typed.
+     */
+    public boolean isExplicitlyTyped() {
+        return getParameters().toStream().none(ASTLambdaParameter::isTypeInferred);
+    }
+
     /** Returns true if this lambda has a block for body. */
     public boolean isBlockBody() {
         return getChild(1) instanceof ASTBlock;
@@ -101,6 +110,15 @@ public final class ASTLambdaExpression extends AbstractJavaExpr implements Funct
     public @Nullable ASTBlock getBlockBody() {
         return AstImplUtil.getChildAs(this, 1, ASTBlock.class);
     }
+
+    /**
+     * Returns the body of this lambda if it is a block.
+     */
+    @Override
+    public @Nullable ASTBlock getBody() {
+        return getBlockBody();
+    }
+
 
     /**
      * Returns the body of this lambda if it is an expression.

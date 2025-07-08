@@ -21,7 +21,7 @@ fi
 
 set -e
 
-# Make sure to use java11. This is already installed by build.sh
+# Make sure to use java11. This is already installed by build.yml/publish-snapshot.yml/publish-release.yml
 export JAVA_HOME=${HOME}/openjdk11
 export PATH=$JAVA_HOME/bin:$PATH
 
@@ -47,7 +47,7 @@ fi
 
 set -e
 
-# Make sure to use java11. This is already installed by build.sh
+# Make sure to use java11. This is already installed by build.yml/publish-snapshot.yml/publish-release.yml
 export JAVA_HOME=${HOME}/openjdk11
 export PATH=$JAVA_HOME/bin:$PATH
 
@@ -195,5 +195,12 @@ EOF
     <connection>https://github.com/pmd/java-regression-tests</connection>
     <tag>main</tag>
     <auxclasspath-command>realpath java-regression-tests-*.jar</auxclasspath-command>
+  </project>
+
+  <project>
+    <name>OracleDBUtils</name>
+    <type>git</type>
+    <connection>https://github.com/Qualtagh/OracleDBUtils</connection>
+    <tag>0513fe6b053b31e6c09ac6f86eb2064733ecf32d</tag>
   </project>
 </projectlist>

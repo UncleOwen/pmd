@@ -4,7 +4,7 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import net.sourceforge.pmd.lang.document.Chars;
 
 /**
  * The null literal.
@@ -20,6 +20,10 @@ public final class ASTNullLiteral extends AbstractLiteral implements ASTLiteral 
         super(id);
     }
 
+    @Override
+    public boolean isCompileTimeConstant() {
+        return false;
+    }
 
     @Override
     public <P, R> R acceptVisitor(JavaVisitor<? super P, ? extends R> visitor, P data) {
@@ -27,12 +31,7 @@ public final class ASTNullLiteral extends AbstractLiteral implements ASTLiteral 
     }
 
     @Override
-    public boolean isCompileTimeConstant() {
-        return false;
-    }
-
-    @Override
-    public @Nullable Object getConstValue() {
-        return null;
+    public Chars getLiteralText() {
+        return super.getLiteralText();
     }
 }

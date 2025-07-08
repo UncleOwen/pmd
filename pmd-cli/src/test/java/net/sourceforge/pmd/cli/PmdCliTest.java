@@ -6,12 +6,14 @@ package net.sourceforge.pmd.cli;
 
 import static net.sourceforge.pmd.cli.internal.CliExitCode.ERROR;
 import static net.sourceforge.pmd.cli.internal.CliExitCode.OK;
+import static net.sourceforge.pmd.cli.internal.CliExitCode.RECOVERED_ERRORS_OR_VIOLATIONS;
 import static net.sourceforge.pmd.cli.internal.CliExitCode.USAGE_ERROR;
 import static net.sourceforge.pmd.cli.internal.CliExitCode.VIOLATIONS_FOUND;
 import static net.sourceforge.pmd.util.CollectionUtil.listOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
+import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
@@ -143,6 +145,21 @@ class PmdCliTest extends BaseCliTest {
         String reportText = readString(reportFile);
         assertThat(reportText, not(containsStringIgnoringCase("error")));
     }
+
+    @Test
+    void testExcludeFile() throws Exception {
+
+        // restoring system properties: --debug might change logging properties
+        SystemLambda.restoreSystemProperties(() -> {
+            runCli(OK,
+                    "--dir", srcDir.toString(), "--rulesets", DUMMY_RULESET_WITH_VIOLATIONS, "--exclude", srcDir.toString(), "--debug")
+                    .verify(r -> {
+                        r.checkStdErr(containsString("No files to analyze"));
+                        r.checkStdOut(emptyString());
+                    });
+        });
+    }
+
 
     /**
      * This tests to create the report file in the current working directory.
@@ -316,6 +333,27 @@ class PmdCliTest extends BaseCliTest {
             .verify(r -> r.checkStdOut(
                 containsString("Violation from ReportAllRootNodes")
             ));
+    }
+
+    @Test
+    void exitStatusWithErrors() throws Exception {
+        runCli(RECOVERED_ERRORS_OR_VIOLATIONS, "--use-version", "dummy-parserThrows",
+                "-d", srcDir.toString(), "-f", "text", "-R", RULESET_WITH_VIOLATION)
+            .verify(r -> {
+                r.checkStdOut(containsString("someSource.dummy\t-\tParseException: Parse exception: ohio"));
+                r.checkStdErr(containsString("An error occurred while executing PMD."));
+            });
+    }
+
+    @Test
+    void exitStatusWithErrorsNoFail() throws Exception {
+        runCli(OK, "--use-version", "dummy-parserThrows",
+                "-d", srcDir.toString(), "-f", "text", "-R", RULESET_WITH_VIOLATION,
+                "--no-fail-on-error")
+            .verify(r -> {
+                r.checkStdOut(containsString("someSource.dummy\t-\tParseException: Parse exception: ohio"));
+                r.checkStdErr(containsString("An error occurred while executing PMD."));
+            });
     }
 
     @Test
@@ -502,6 +540,25 @@ class PmdCliTest extends BaseCliTest {
         runCliSuccessfully("-d", srcDir.toString(), "-f", "text", "-R", RULESET_WITH_VIOLATION, "--minimum-priority", "1");
         runCliSuccessfully("-d", srcDir.toString(), "-f", "text", "-R", RULESET_WITH_VIOLATION, "--minimum-priority", "2");
     }
+
+    @Test
+    void defaultThreadCount() throws Exception {
+        CliExecutionResult result = runCliSuccessfully("--debug", "--dir", srcDir.toString(), "--rulesets", RULESET_NO_VIOLATIONS);
+        result.checkStdErr(containsString("[DEBUG] Using " + Runtime.getRuntime().availableProcessors() + " threads for analysis"));
+    }
+
+    @Test
+    void monoThreadCount() throws Exception {
+        CliExecutionResult result = runCliSuccessfully("--debug", "--threads", "0", "--dir", srcDir.toString(), "--rulesets", RULESET_NO_VIOLATIONS);
+        result.checkStdErr(containsString("[DEBUG] Using main thread for analysis"));
+    }
+
+    @Test
+    void oneThreadCount() throws Exception {
+        CliExecutionResult result = runCliSuccessfully("--debug", "--threads", "1", "--dir", srcDir.toString(), "--rulesets", RULESET_NO_VIOLATIONS);
+        result.checkStdErr(containsString("[DEBUG] Using 1 thread for analysis"));
+    }
+
 
     // utilities
     private Path tempRoot() {

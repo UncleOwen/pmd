@@ -10,8 +10,11 @@ import net.sourceforge.pmd.lang.rule.xpath.NoAttribute;
 
 /**
  * @author Clément Fournier
+ * @see ASTLiteral#getLiteralText()
+ * @see #getLiteralText()
  */
-abstract class AbstractLiteral extends AbstractJavaExpr implements ASTLiteral {
+// Note: This class must not implement ASTLiteral, see comment on #getLiteralText()
+abstract class AbstractLiteral extends AbstractJavaExpr {
 
     private JavaccToken literalToken;
 
@@ -26,7 +29,7 @@ abstract class AbstractLiteral extends AbstractJavaExpr implements ASTLiteral {
         // its parentheses have not yet been set yet so the text is
         // just the literal.
         assert getParenthesisDepth() == 0;
-        assert getFirstToken() == getLastToken(); // NOPMD
+        assert getFirstToken() == getLastToken();
         literalToken = getFirstToken();
     }
 
@@ -41,12 +44,15 @@ abstract class AbstractLiteral extends AbstractJavaExpr implements ASTLiteral {
         return firstToken.getImageCs();
     }
 
-    @Override
-    public final Chars getLiteralText() {
+    // This method represents ASTLiteral#getLiteralText().
+    // However, since this class is package private, this method is not reliably accessible
+    // via reflection/method handles (see https://github.com/pmd/pmd/issues/4885).
+    // Subclasses of this class need to implement ASTLiteral and override this method
+    // as public.
+    Chars getLiteralText() {
         assert literalToken.getImageCs() != null;
         return literalToken.getImageCs();
     }
-
 
     @Override
     public boolean isCompileTimeConstant() {

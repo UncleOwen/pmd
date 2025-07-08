@@ -36,16 +36,15 @@ import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.CtorInvocat
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.FunctionalExprMirror;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.InvocationMirror;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.InvocationMirror.MethodCtDecl;
-import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.LambdaExprMirror;
-import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.MethodRefMirror;
 import net.sourceforge.pmd.lang.java.types.internal.infer.ExprMirror.PolyExprMirror;
 import net.sourceforge.pmd.lang.java.types.internal.infer.InferenceVar.BoundKind;
 import net.sourceforge.pmd.util.CollectionUtil;
+import net.sourceforge.pmd.util.OptionalBool;
 
 /**
  * Main entry point for type inference.
  */
-@SuppressWarnings({"PMD.FieldNamingConventions", "PMD.CompareObjectsWithEquals"})
+@SuppressWarnings("PMD.CompareObjectsWithEquals")
 public final class Infer {
 
     final ExprOps exprOps;
@@ -55,7 +54,7 @@ public final class Infer {
     private final boolean isPreJava8;
     private final TypeSystem ts;
 
-    final MethodCtDecl NO_CTDECL; // SUPPRESS CHECKSTYLE same
+    private final MethodCtDecl NO_CTDECL; // SUPPRESS CHECKSTYLE same
 
     /** This is a sentinel for when the CTDecl was resolved, but invocation failed. */
     final MethodCtDecl FAILED_INVOCATION; // SUPPRESS CHECKSTYLE same
@@ -91,6 +90,10 @@ public final class Infer {
 
     public TypeInferenceLogger getLogger() {
         return LOG;
+    }
+
+    public MethodCtDecl getMissingCtDecl() {
+        return NO_CTDECL;
     }
 
     public PolySite<FunctionalExprMirror> newFunctionalSite(FunctionalExprMirror mirror, @Nullable JTypeMirror expectedType) {
@@ -143,16 +146,7 @@ public final class Infer {
         } catch (ResolutionFailedException rfe) {
             rfe.getFailure().addContext(null, site, null);
             LOG.logResolutionFail(rfe.getFailure());
-            // here we set expected if not null, the lambda will have the target type
-            expr.setInferredType(expected == null ? ts.UNKNOWN : expected);
-            if (expr instanceof MethodRefMirror) {
-                MethodRefMirror mref = (MethodRefMirror) expr;
-                mref.setFunctionalMethod(ts.UNRESOLVED_METHOD);
-                mref.setCompileTimeDecl(ts.UNRESOLVED_METHOD);
-            } else {
-                LambdaExprMirror lambda = (LambdaExprMirror) expr;
-                lambda.setFunctionalMethod(ts.UNRESOLVED_METHOD);
-            }
+            expr.finishFailedInference(expected);
         }
     }
 
@@ -175,7 +169,7 @@ public final class Infer {
     public void inferInvocationRecursively(MethodCallSite site) {
         MethodCtDecl ctdecl = goToInvocationWithFallback(site);
         InvocationMirror expr = site.getExpr();
-        expr.setCtDecl(ctdecl);
+        expr.setCompileTimeDecl(ctdecl);
         if (ctdecl == NO_CTDECL) {
             expr.setInferredType(fallbackType(expr));
         } else {
@@ -183,9 +177,36 @@ public final class Infer {
         }
     }
 
+
+    /**
+     * Given a symbol S and a type T which is assumed to be
+     * a supertype of some parameterization of S, infer this
+     * parameterization.
+     */
+    public JTypeMirror inferParameterizationForSubtype(JClassSymbol symbol, JTypeMirror superType) {
+        if (!symbol.isGeneric()) {
+            return ts.typeOf(symbol, false);
+        } else if (superType instanceof JClassType && ((JClassType) superType).hasErasedSuperTypes()) {
+            return ts.typeOf(symbol, true); // raw type
+        }
+
+        // otherwise infer
+        try {
+            InferenceContext ctx = newContextFor(symbol.getTypeParameters());
+            JTypeMirror withIvars = ctx.mapToIVars(ts.typeOf(symbol, false));
+            if (TypeOps.isConvertible(withIvars, superType).bySubtyping()) {
+                ctx.solve(true);
+                return InferenceContext.groundOrWildcard(withIvars);
+            }
+        } catch (ResolutionFailedException ignored) {
+
+        }
+        return ts.parameterise(symbol, Collections.nCopies(symbol.getTypeParameterCount(), ts.ERROR));
+    }
+
     private MethodCtDecl goToInvocationWithFallback(MethodCallSite site) {
         MethodCtDecl ctdecl = getCompileTimeDecl(site);
-        if (ctdecl == NO_CTDECL) { // NOPMD CompareObjectsWithEquals
+        if (ctdecl == NO_CTDECL) {
             return NO_CTDECL;
         }
 
@@ -195,7 +216,7 @@ public final class Infer {
 
         { // reduce scope of invocType, outside of here it's failed
             final MethodCtDecl invocType = finishInstantiation(site, ctdecl);
-            if (invocType != FAILED_INVOCATION) { // NOPMD CompareObjectsWithEquals
+            if (invocType != FAILED_INVOCATION) {
                 return invocType;
             }
         }
@@ -241,7 +262,7 @@ public final class Infer {
      */
     @NonNull MethodCtDecl determineInvocationTypeOrFail(MethodCallSite site) {
         MethodCtDecl ctdecl = getCompileTimeDecl(site);
-        if (ctdecl == NO_CTDECL) { // NOPMD CompareObjectsWithEquals
+        if (ctdecl == NO_CTDECL) {
             return ctdecl;
         }
 
@@ -252,7 +273,7 @@ public final class Infer {
     public @NonNull MethodCtDecl getCompileTimeDecl(MethodCallSite site) {
         if (site.getExpr().getCtDecl() == null) {
             MethodCtDecl ctdecl = computeCompileTimeDecl(site);
-            site.getExpr().setCtDecl(ctdecl); // cache it for later
+            site.getExpr().setCompileTimeDecl(ctdecl); // cache it for later
         }
         return site.getExpr().getCtDecl();
     }
@@ -358,8 +379,9 @@ public final class Infer {
             return new MethodCtDecl(candidate,
                                     phase,
                                     site.canSkipInvocation(),
-                                    site.needsUncheckedConversion(),
-                                    false);
+                    OptionalBool.definitely(site.needsUncheckedConversion()),
+                                    false,
+                                    site.getExpr());
         }
     }
 
@@ -575,17 +597,20 @@ public final class Infer {
                 // see: https://docs.oracle.com/javase/specs/jls/se9/html/jls-18.html#jls-18.5.1
                 // as per https://docs.oracle.com/javase/specs/jls/se9/html/jls-18.html#jls-18.5.2
                 // we only test it can reduce, we don't commit inferred types at this stage
-                InferenceContext ctxCopy = infCtx.copy();
-                LOG.applicabilityTest(ctxCopy, m);
-                ctxCopy.solve(/*onlyBoundedVars:*/isPreJava8());
-
+                InferenceContext ctxCopy = infCtx.shallowCopy();
+                LOG.applicabilityTest(ctxCopy);
+                try {
+                    ctxCopy.solve(/*onlyBoundedVars:*/isPreJava8());
+                } finally {
+                    LOG.finishApplicabilityTest();
+                }
                 // if unchecked conversion was needed, update the site for invocation pass
                 if (ctxCopy.needsUncheckedConversion()) {
                     site.setNeedsUncheckedConversion();
                 }
 
                 // don't commit any types
-                return m;
+                return infCtx.mapToIVars(m);
             }
         } finally {
             // Note that even if solve succeeded, listeners checking deferred
@@ -761,7 +786,7 @@ public final class Infer {
 
             for (JTypeMirror aLowerBound : alpha.getBounds(BoundKind.LOWER)) {
                 for (JTypeMirror anotherLowerBound : alpha.getBounds(BoundKind.LOWER)) {
-                    if (aLowerBound != anotherLowerBound // NOPMD CompareObjectsWithEquals
+                    if (aLowerBound != anotherLowerBound
                         && infCtx.isGround(aLowerBound)
                         && infCtx.isGround(anotherLowerBound)
                         && commonSuperWithDiffParameterization(aLowerBound, anotherLowerBound)) {
@@ -789,7 +814,7 @@ public final class Infer {
 
     private boolean commonSuperWithDiffParameterization(JTypeMirror t, JTypeMirror s) {
         JTypeMirror lubResult = ts.lub(listOf(t, s));
-        if (lubResult.isBottom() || lubResult.isTop()) {
+        if (lubResult.isBottom() || lubResult.isTop() || t.isBottom() || s.isBottom()) {
             return false;
         }
         for (JTypeMirror sup : asList(lubResult)) {
@@ -797,6 +822,8 @@ public final class Infer {
                 JClassSymbol sym = ((JClassType) sup).getSymbol();
                 JTypeMirror asSuperOfT = t.getAsSuper(sym);
                 JTypeMirror asSuperOfS = s.getAsSuper(sym);
+                assert asSuperOfS != null : "s <: sup, because sup is part of the LUB of s";
+                assert asSuperOfT != null : "t <: sup, because sup is part of the LUB of t";
                 if (!asSuperOfS.equals(asSuperOfT)) {
                     return true;
                 }
@@ -943,8 +970,12 @@ public final class Infer {
         Convertibility isConvertible = isConvertible(groundE, groundF, phase.canBox());
         if (isConvertible.never()) {
             throw ResolutionFailedException.incompatibleFormal(LOG, arg, groundE, groundF);
-        } else if (isConvertible.withUncheckedWarning() && site != null) {
-            site.setNeedsUncheckedConversion();
+        } else if (isConvertible.withUncheckedWarning()) {
+            if (site != null) {
+                site.setNeedsUncheckedConversion();
+            } else {
+                infCtx.setNeedsUncheckedConversion();
+            }
         }
     }
 
@@ -954,7 +985,7 @@ public final class Infer {
      * https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.3
      */
     static Convertibility isConvertible(JTypeMirror exprType, JTypeMirror formalType, boolean canBox) {
-        if (exprType == formalType) { // NOPMD CompareObjectsWithEquals
+        if (exprType == formalType) {
             // fast path
             return Convertibility.SUBTYPING;
         }

@@ -8,9 +8,10 @@ import static net.sourceforge.pmd.properties.PropertyFactory.booleanProperty;
 
 import net.sourceforge.pmd.lang.java.ast.ASTForeachStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTLocalVariableDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableId;
+import net.sourceforge.pmd.lang.java.ast.internal.JavaAstUtils;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
-import net.sourceforge.pmd.reporting.RuleContext;
 
 public class LocalVariableCouldBeFinalRule extends AbstractJavaRulechainRule {
 
@@ -24,13 +25,22 @@ public class LocalVariableCouldBeFinalRule extends AbstractJavaRulechainRule {
 
     @Override
     public Object visit(ASTLocalVariableDeclaration node, Object data) {
-        if (node.isFinal()) { // also for implicit finals, like resources
+        if (node.isFinal()) { // also for implicit finals, like resources, or lombok.val
             return data;
         }
         if (getProperty(IGNORE_FOR_EACH) && node.getParent() instanceof ASTForeachStatement) {
             return data;
         }
-        MethodArgumentCouldBeFinalRule.checkForFinal((RuleContext) data, node.getVarIds());
+        if (node.getVarIds().all(JavaAstUtils::isEffectivelyFinal)) {
+            // All variables declared in this ASTLocalVariableDeclaration need to be
+            // effectively final, otherwise we cannot just add a final modifier.
+            for (ASTVariableId vid : node.getVarIds()) {
+                if (!JavaAstUtils.isNeverUsed(vid)) {
+                    // filter out unused variables
+                    asCtx(data).addViolation(vid, vid.getName());
+                }
+            }
+        }
         return data;
     }
 

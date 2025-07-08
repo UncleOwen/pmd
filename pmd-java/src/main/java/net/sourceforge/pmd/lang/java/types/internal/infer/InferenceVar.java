@@ -35,7 +35,7 @@ import net.sourceforge.pmd.lang.java.types.TypeSystem;
  * type is of no importance outside the implementation of this framework.
  */
 @SuppressWarnings("PMD.CompareObjectsWithEquals")
-public final class InferenceVar implements JTypeMirror, SubstVar {
+public final class InferenceVar implements SubstVar {
 
     // we used to use greek letters (for style), but they're hard to type
     private static final String NAMES = "abcdefghijklmnopqrstuvwxyz"; // + "αβγδεζηθκλμνξπρςυφχψω"
@@ -79,7 +79,7 @@ public final class InferenceVar implements JTypeMirror, SubstVar {
      * Returns the bounds of a certain kind that apply to
      * this variable.
      */
-    Set<JTypeMirror> getBounds(BoundKind kind) {
+    public Set<JTypeMirror> getBounds(BoundKind kind) {
         return boundSet.bounds.getOrDefault(kind, Collections.emptySet());
     }
 
@@ -97,7 +97,6 @@ public final class InferenceVar implements JTypeMirror, SubstVar {
      * Adds a new bound on this variable.
      */
     public void addBound(BoundKind kind, JTypeMirror type) {
-        this.hasNonTrivialBound = true;
         addBound(kind, type, false);
     }
 
@@ -115,9 +114,15 @@ public final class InferenceVar implements JTypeMirror, SubstVar {
             // may occur because of transitive propagation
             // alpha <: alpha is always true and not interesting
             return;
+        } else if (kind == BoundKind.LOWER && type.isBottom()) {
+            // null <: alpha is not interesting and may cause errors because of lub.
+            return;
         }
 
         if (boundSet.bounds.computeIfAbsent(kind, k -> new LinkedHashSet<>()).add(type)) {
+            if (!isPrimaryBound) {
+                this.hasNonTrivialBound = true;
+            }
             ctx.onBoundAdded(this, kind, type, isPrimaryBound);
         }
     }
@@ -169,7 +174,7 @@ public final class InferenceVar implements JTypeMirror, SubstVar {
             for (JTypeMirror prev : prevBounds) {
                 // add substituted bound
                 JTypeMirror newBound = prev.subst(substitution);
-                if (newBound == prev || prevBounds.contains(newBound)) { // NOPMD CompareObjectsWithEquals
+                if (newBound == prev || prevBounds.contains(newBound)) {
                     // not actually new, don't call listeners, etc
                     newBounds.add(newBound);
                 } else {
@@ -194,7 +199,7 @@ public final class InferenceVar implements JTypeMirror, SubstVar {
 
     public boolean isEquivalentTo(JTypeMirror t) {
         return this == t || t instanceof InferenceVar
-            && ((InferenceVar) t).boundSet == this.boundSet; // NOPMD CompareObjectsWithEquals
+            && ((InferenceVar) t).boundSet == this.boundSet;
     }
 
     public boolean isSubtypeNoSideEffect(@NonNull JTypeMirror other) {

@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.test.schema;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -25,8 +26,28 @@ public class RuleTestDescriptor {
     private String code;
     private int expectedProblems;
     private List<Integer> expectedLineNumbers;
+    private List<Integer> expectedEndLineNumbers;
     private List<String> expectedMessages;
+    private List<SuppressionDescriptor> expectedSuppressions;
     private int lineNumber;
+
+    public static final class SuppressionDescriptor {
+        private final int line;
+        private final String suppressorId;
+
+        private SuppressionDescriptor(int line, String suppressorId) {
+            this.line = line;
+            this.suppressorId = suppressorId;
+        }
+
+        public int getLine() {
+            return line;
+        }
+
+        public String getSuppressorId() {
+            return suppressorId;
+        }
+    }
 
     public RuleTestDescriptor(int index, Rule rule) {
         this.index = index;
@@ -86,6 +107,12 @@ public class RuleTestDescriptor {
         this.expectedMessages = expectedMessages;
     }
 
+    public void recordExpectedViolations(int expectedProblems, List<Integer> expectedLineNumbers, List<Integer> expectedEndLineNumbers, List<String> expectedMessages) {
+        checkListSize(expectedProblems, expectedEndLineNumbers);
+        this.expectedEndLineNumbers = expectedEndLineNumbers;
+        recordExpectedViolations(expectedProblems, expectedLineNumbers, expectedMessages);
+    }
+
     private void checkListSize(int expectedProblems, List<?> expectedMessages) {
         if (!expectedMessages.isEmpty() && expectedProblems != expectedMessages.size()) {
             throw new IllegalArgumentException(
@@ -103,6 +130,10 @@ public class RuleTestDescriptor {
 
     public List<Integer> getExpectedLineNumbers() {
         return expectedLineNumbers;
+    }
+
+    public List<Integer> getExpectedEndLineNumbers() {
+        return expectedEndLineNumbers;
     }
 
     public List<String> getExpectedMessages() {
@@ -123,5 +154,28 @@ public class RuleTestDescriptor {
 
     public void setLineNumber(int lineNumber) {
         this.lineNumber = lineNumber;
+    }
+
+    public boolean hasExpectedSuppressions() {
+        return expectedSuppressions != null;
+    }
+
+    void createEmptyExpectedSuppression() {
+        expectedSuppressions = new ArrayList<>();
+    }
+
+    public void recordExpectedSuppression(int line) {
+        recordExpectedSuppression(line, null);
+    }
+
+    public void recordExpectedSuppression(int line, String suppressor) {
+        if (expectedSuppressions == null) {
+            createEmptyExpectedSuppression();
+        }
+        this.expectedSuppressions.add(new SuppressionDescriptor(line, suppressor));
+    }
+
+    public List<SuppressionDescriptor> getExpectedSuppressions() {
+        return expectedSuppressions;
     }
 }

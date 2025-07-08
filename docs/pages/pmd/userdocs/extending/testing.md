@@ -3,7 +3,7 @@ title: Testing your rules
 tags: [extending, userdocs]
 summary: "Learn how to use PMD's simple test framework for unit testing rules."
 permalink: pmd_userdocs_extending_testing.html
-last_updated: December 2023 (7.0.0)
+last_updated: June 2025 (7.15.0)
 author: Andreas Dangel <andreas.dangel@adangel.org>
 ---
 
@@ -101,7 +101,7 @@ This is a stripped down example which just contains two test cases.
 <test-data
     xmlns="http://pmd.sourceforge.net/rule-tests"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests https://pmd.sourceforge.io/rule-tests_1_0_0.xsd">
+    xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests https://pmd.github.io/schema/rule-tests_1_1_0.xsd">
 
     <test-code>
         <description>concrete class</description>
@@ -132,7 +132,7 @@ The root element is `<test-data>`. It can contain one or more `<test-code>` and 
 Each `<test-code>` element defines a single test case. `<code-fragment>` elements are used to share code snippets
 between different test cases.
 
-{%include note.html content="The XML schema is available at [rule-tests.xsd](https://github.com/pmd/pmd/blob/master/pmd-test-schema/src/main/resources/net/sourceforge/pmd/test/schema/rule-tests_1_0_0.xsd)." %}
+{%include note.html content="The XML schema is available at [rule-tests.xsd](https://github.com/pmd/pmd/blob/main/pmd-test-schema/src/main/resources/net/sourceforge/pmd/test/schema/rule-tests_1_1_0.xsd)." %}
 
 ### `<test-code>` attributes
 
@@ -157,10 +157,24 @@ The `<test-code>` elements understands the following optional attributes:
 *   **`<expected-linenumbers>`**: Optional element. It's a comma separated list of line numbers.
     If there are rule violations reported, then this allows you to
     assert the line numbers. Useful if multiple violations should be detected and to be sure that
-    false positives and negatives don't erase each other.
+    false positives and negatives don't erase each other.\
+    Since 7.12.0, you can also specify ranges in order to verify begin line and end line of the reported
+    violation's location. E.g. `1-3,4-5` asserts, that there are two violations, the first one from line 1 to 3,
+    and the second one from lines 4 to 5.
 
 *   **`<expected-messages>`**: Optional element, with `<message>` elements as children.
     Can be used to validate the correct error message, e.g. if the error message references a variable name.
+
+*   **`<expected-suppressions>`**: Optional element, with `<suppressor>` elements as children.
+    Each `<suppressor>` element has an attribute `line`, where the suppression violation occurred and
+    the suppressor's id as the text content. The suppression id is optional and can be omitted. Example:
+    ```xml
+    <expected-suppressions>
+        <suppressor line="5">@SuppressWarnings</suppressor>
+        <suppressor line="6"/>
+    </expected-suppressions>
+    ```  
+    This is available since PMD 7.15.0 (rule-test schema version 1.1.0).
 
 *   **`<code>`**: Either the `<code>` element or the `<code-ref>` element is required. It provides the actual code
     snippet on which the rule is executed. The code itself is usually wrapped in a "CDATA" section, so that no
@@ -182,12 +196,12 @@ in a "CDATA" section, so that no further XML escapes (entity references such as 
 
 ### Complete XML example
 
-``` xml
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <test-data
     xmlns="http://pmd.sourceforge.net/rule-tests"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests https://pmd.sourceforge.io/rule-tests_1_0_0.xsd">
+    xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests https://pmd.sourceforge.io/rule-tests_1_1_0.xsd">
 
     <test-code disabled="false">
         <description>Just a description, will be used as the test name for JUnit in the reports</description>
@@ -198,6 +212,9 @@ in a "CDATA" section, so that no further XML escapes (entity references such as 
             <message>Violation message 1</message>
             <message>Violation message 2</message>
         </expected-messages>
+        <expected-suppressions>
+            <suppressor line="20">@SuppressWarnings</suppressor>
+        </expected-suppressions>
         <code><![CDATA[
 public class ConsistentReturn {
     public Boolean foo() {

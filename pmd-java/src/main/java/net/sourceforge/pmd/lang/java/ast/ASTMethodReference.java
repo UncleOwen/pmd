@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import net.sourceforge.pmd.lang.java.symbols.JConstructorSymbol;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
+import net.sourceforge.pmd.lang.java.types.OverloadSelectionResult;
 import net.sourceforge.pmd.lang.java.types.TypeSystem;
 
 /**
@@ -23,14 +24,13 @@ import net.sourceforge.pmd.lang.java.types.TypeSystem;
  * </pre>
  */
 public final class ASTMethodReference extends AbstractJavaExpr
-    implements ASTPrimaryExpression,
-               QualifiableExpression,
+    implements QualifiableExpression,
                LeftRecursiveNode,
                MethodUsage,
                FunctionalExpression {
 
     private JMethodSig functionalMethod;
-    private JMethodSig compileTimeDecl;
+    private OverloadSelectionResult compileTimeDecl;
 
     private String methodName;
 
@@ -153,6 +153,11 @@ public final class ASTMethodReference extends AbstractJavaExpr
      * @see #getTypeMirror()
      */
     public JMethodSig getReferencedMethod() {
+        return getOverloadSelectionInfo().getMethodType();
+    }
+
+    @Override
+    public OverloadSelectionResult getOverloadSelectionInfo() {
         forceTypeResolution();
         return assertNonNullAfterTypeRes(compileTimeDecl);
     }
@@ -161,8 +166,8 @@ public final class ASTMethodReference extends AbstractJavaExpr
         this.functionalMethod = methodType;
     }
 
-    void setCompileTimeDecl(JMethodSig methodType) {
-        this.compileTimeDecl = methodType;
+    void setCompileTimeDecl(OverloadSelectionResult ctdecl) {
+        this.compileTimeDecl = ctdecl;
     }
 
 }

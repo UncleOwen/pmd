@@ -93,7 +93,6 @@ public class PMDConfiguration extends AbstractConfiguration {
 
     /** The default suppress marker string. */
     public static final String DEFAULT_SUPPRESS_MARKER = "NOPMD";
-    private Path reportFile;
 
     // General behavior options
     private String suppressMarker = DEFAULT_SUPPRESS_MARKER;
@@ -108,7 +107,6 @@ public class PMDConfiguration extends AbstractConfiguration {
     private String reportFormat;
     private Properties reportProperties = new Properties();
     private boolean showSuppressedViolations = false;
-    private boolean failOnViolation = true;
 
     private AnalysisCache analysisCache = new NoopAnalysisCache();
     private boolean ignoreIncrementalAnalysis;
@@ -363,27 +361,6 @@ public class PMDConfiguration extends AbstractConfiguration {
     }
 
     /**
-     * Whether PMD should exit with status 4 (the default behavior, true) if
-     * violations are found or just with 0 (to not break the build, e.g.).
-     *
-     * @return failOnViolation
-     */
-    public boolean isFailOnViolation() {
-        return failOnViolation;
-    }
-
-    /**
-     * Sets whether PMD should exit with status 4 (the default behavior, true)
-     * if violations are found or just with 0 (to not break the build, e.g.).
-     *
-     * @param failOnViolation
-     *            failOnViolation
-     */
-    public void setFailOnViolation(boolean failOnViolation) {
-        this.failOnViolation = failOnViolation;
-    }
-
-    /**
      * Retrieves the currently used analysis cache. Will never be null.
      *
      * @return The currently used analysis cache. Never null.
@@ -454,24 +431,6 @@ public class PMDConfiguration extends AbstractConfiguration {
      */
     public boolean isIgnoreIncrementalAnalysis() {
         return ignoreIncrementalAnalysis;
-    }
-
-    /**
-     * Get the file to which the report should render.
-     *
-     * @return The file to which to render.
-     */
-    public Path getReportFilePath() {
-        return reportFile;
-    }
-
-    /**
-     * Set the file to which the report should render.
-     *
-     * @param reportFile the file to set
-     */
-    public void setReportFile(Path reportFile) {
-        this.reportFile = reportFile;
     }
 
     @Override

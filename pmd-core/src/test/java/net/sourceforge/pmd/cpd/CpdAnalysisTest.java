@@ -4,8 +4,12 @@
 
 package net.sourceforge.pmd.cpd;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
@@ -22,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,11 +34,13 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
+import net.sourceforge.pmd.internal.util.IOUtil;
 import net.sourceforge.pmd.lang.DummyLanguageModule;
 import net.sourceforge.pmd.lang.ast.LexException;
 import net.sourceforge.pmd.lang.ast.impl.javacc.MalformedSourceException;
 import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.document.TextFile;
+import net.sourceforge.pmd.reporting.Report;
 import net.sourceforge.pmd.util.log.PmdReporter;
 
 /**
@@ -208,16 +215,89 @@ class CpdAnalysisTest {
         }
         verify(reporter).errorEx(eq("Error while tokenizing"), any(LexException.class));
         verify(reporter).errorEx(eq("Error while tokenizing"), any(MalformedSourceException.class));
-        verify(reporter).errorEx(eq("Exception while running CPD"), any(IllegalStateException.class));
+        verify(reporter).error(eq("Errors were detected while lexing source, exiting because --skip-lexical-errors is unset."));
         verifyNoMoreInteractions(reporter);
     }
+
+    @Test
+    void reportShouldContainProcessingErrors() throws IOException {
+        AtomicReference<CPDReport> report = new AtomicReference<>();
+        PmdReporter reporter = mock(PmdReporter.class);
+        config.setReporter(reporter);
+
+        try (CpdAnalysis cpd = CpdAnalysis.create(config)) {
+            assertTrue(cpd.files().addSourceFile(FileId.fromPathLikeString("foo.dummy"), DummyLanguageModule.CPD_THROW_LEX_EXCEPTION));
+            assertTrue(cpd.files().addSourceFile(FileId.fromPathLikeString("foo2.dummy"), DummyLanguageModule.CPD_THROW_MALFORMED_SOURCE_EXCEPTION));
+            cpd.performAnalysis(report::set);
+        }
+
+        assertNotNull(report.get(), "CPD aborted early without producing a report");
+        List<Report.ProcessingError> processingErrors = report.get().getProcessingErrors();
+        assertEquals(2, processingErrors.size());
+
+        Report.ProcessingError error1 = processingErrors.get(0);
+        assertEquals("foo.dummy", error1.getFileId().getFileName());
+        assertThat(error1.getDetail(), containsString(LexException.class.getSimpleName()));
+
+        Report.ProcessingError error2 = processingErrors.get(1);
+        assertEquals("foo2.dummy", error2.getFileId().getFileName());
+        assertThat(error2.getDetail(), containsString(MalformedSourceException.class.getSimpleName()));
+
+        verify(reporter).errorEx(eq("Skipping file"), any(LexException.class));
+        verify(reporter).errorEx(eq("Skipping file"), any(MalformedSourceException.class));
+        verifyNoMoreInteractions(reporter);
+    }
+
+    @Test
+    void reportToNonExistentFile(@TempDir Path tmpDir) throws IOException {
+        Path reportFile = tmpDir.resolve("cpd.txt");
+        assertFalse(Files.exists(reportFile), "Report file " + reportFile + " should not exist");
+
+        testReportFile(reportFile);
+    }
+
+    @Test
+    void reportToExistingFileShouldOverwrite(@TempDir Path tmpDir) throws IOException {
+        Path reportFile = tmpDir.resolve("cpd.txt");
+        assertFalse(Files.exists(reportFile), "Report file " + reportFile + " should not exist");
+        final String sentinel = "EMPTY_FILE";
+        Files.write(reportFile, sentinel.getBytes());
+        assertTrue(Files.exists(reportFile), "Report file " + reportFile + " should have been created");
+
+        String reportContents = testReportFile(reportFile);
+        assertThat(reportContents, not(containsString(sentinel)));
+    }
+
+    private String testReportFile(Path reportFile) throws IOException {
+        PmdReporter reporter = mock(PmdReporter.class);
+        config.setReporter(reporter);
+        config.setRendererName("text");
+        config.setReportFile(reportFile);
+
+        Path dup1 = Paths.get("./" + BASE_TEST_RESOURCE_PATH, "dup1.txt");
+        Path dup2 = Paths.get("./" + BASE_TEST_RESOURCE_PATH, "dup2.txt");
+
+        try (CpdAnalysis cpd = CpdAnalysis.create(config)) {
+            assertTrue(cpd.files().addFile(dup2));
+            assertTrue(cpd.files().addFile(dup1));
+            cpd.performAnalysis();
+        }
+
+        assertTrue(Files.exists(reportFile), "Report file " + reportFile + " should have been created");
+
+        String reportContents = IOUtil.readFileToString(reportFile.toFile());
+        assertThat(reportContents, containsString("duplication in the following files"));
+        assertThat(reportContents, containsString(dup1.toAbsolutePath().normalize().toString()));
+        assertThat(reportContents, containsString(dup2.toAbsolutePath().normalize().toString()));
+        return reportContents;
+    }
+
 
     @Test
     void testSkipLexicalErrors() throws IOException {
         PmdReporter reporter = mock(PmdReporter.class);
         config.setReporter(reporter);
 
-        config.setSkipLexicalErrors(true);
         try (CpdAnalysis cpd = CpdAnalysis.create(config)) {
             assertTrue(cpd.files().addSourceFile(FileId.fromPathLikeString("foo.dummy"), DummyLanguageModule.CPD_THROW_LEX_EXCEPTION));
             assertTrue(cpd.files().addSourceFile(FileId.fromPathLikeString("foo2.dummy"), DummyLanguageModule.CPD_THROW_MALFORMED_SOURCE_EXCEPTION));

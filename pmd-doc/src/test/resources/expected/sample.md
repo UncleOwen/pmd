@@ -43,7 +43,7 @@ RuleTag with full category and without quotes: Use {% rule java/sample/RenamedRu
 
 **Priority:** Medium (3)
 
-Avoid jumbled loop incrementers - its usually a mistake, and is confusing even if intentional.
+Avoid jumbled loop incrementers - it's usually a mistake, and is confusing even if intentional.
 
 **This rule is defined by the following XPath expression:**
 ``` xpath
@@ -116,7 +116,7 @@ The rule has been moved to another ruleset. Use instead: [JumbledIncrementer](pm
 
 **Priority:** Medium (3)
 
-Avoid jumbled loop incrementers - its usually a mistake, and is confusing even if intentional.
+Avoid jumbled loop incrementers - it's usually a mistake, and is confusing even if intentional.
 
 **This rule is defined by the following XPath expression:**
 ``` xpath
@@ -167,7 +167,7 @@ Second paragraph.
 
 Third paragraph.
 
-**This rule is defined by the following Java class:** [net.sourceforge.pmd.lang.java.rule.errorprone.OverrideBothEqualsAndHashcodeRule](https://github.com/pmd/pmd/blob/master/net/sourceforge/pmd/lang/java/rule/errorprone/OverrideBothEqualsAndHashcodeRule.java)
+**This rule is defined by the following Java class:** [net.sourceforge.pmd.lang.java.rule.errorprone.OverrideBothEqualsAndHashcodeRule](https://github.com/pmd/pmd/blob/main/net/sourceforge/pmd/lang/java/rule/errorprone/OverrideBothEqualsAndHashcodeRule.java)
 
 **Example(s):**
 
@@ -216,7 +216,7 @@ This rule has been renamed. Use instead: [JumbledIncrementer](#jumbledincremente
 
 **Priority:** Medium (3)
 
-Avoid jumbled loop incrementers - its usually a mistake, and is confusing even if intentional.
+Avoid jumbled loop incrementers - it's usually a mistake, and is confusing even if intentional.
 
 **This rule is defined by the following XPath expression:**
 ``` xpath
@@ -289,7 +289,7 @@ This rule has been renamed. Use instead: [JumbledIncrementer](#jumbledincremente
 
 **Priority:** Medium (3)
 
-Avoid jumbled loop incrementers - its usually a mistake, and is confusing even if intentional.
+Avoid jumbled loop incrementers - it's usually a mistake, and is confusing even if intentional.
 
 **This rule is defined by the following XPath expression:**
 ``` xpath
@@ -364,7 +364,7 @@ This rule has been renamed. Use instead: [JumbledIncrementer](#jumbledincremente
 
 **Priority:** Medium (3)
 
-Avoid jumbled loop incrementers - its usually a mistake, and is confusing even if intentional.
+Avoid jumbled loop incrementers - it's usually a mistake, and is confusing even if intentional.
 
 **This rule is defined by the following XPath expression:**
 ``` xpath
@@ -439,7 +439,7 @@ This rule has been renamed. Use instead: [JumbledIncrementer](#jumbledincremente
 
 **Priority:** Medium (3)
 
-Avoid jumbled loop incrementers - its usually a mistake, and is confusing even if intentional.
+Avoid jumbled loop incrementers - it's usually a mistake, and is confusing even if intentional.
 
 **This rule is defined by the following XPath expression:**
 ``` xpath

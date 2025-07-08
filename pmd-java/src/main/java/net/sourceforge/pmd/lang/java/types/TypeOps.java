@@ -163,6 +163,7 @@ public final class TypeOps {
         return true;
     }
 
+
     // note that this does not take type annotations into account
     private static final class SameTypeVisitor implements JTypeVisitor<Boolean, JTypeMirror> {
 
@@ -218,7 +219,7 @@ public final class TypeOps {
         @Override
         public Boolean visitInferenceVar(InferenceVar t, JTypeMirror s) {
             if (pure) {
-                return t == s;
+                return t == s || t.getBounds(BoundKind.EQ).contains(s);
             }
 
             if (s instanceof JPrimitiveType) {
@@ -398,7 +399,7 @@ public final class TypeOps {
 
 
     public static Convertibility isConvertible(@NonNull JTypeMirror t, @NonNull JTypeMirror s) {
-        return SubtypeVisitor.INFERENCE.isConvertible(t, s);
+        return SubtypeVisitor.INFERENCE.isConvertible(t, s, true);
     }
 
     @Deprecated // unused
@@ -595,7 +596,7 @@ public final class TypeOps {
 
 
         Convertibility isConvertible(@NonNull JTypeMirror t, @NonNull JTypeMirror s) {
-            return isConvertible(t, s, true);
+            return isConvertible(t, s, false);
         }
 
         /**
@@ -634,15 +635,7 @@ public final class TypeOps {
                     return isConvertible(t, lower);
                 }
                 // otherwise fallthrough
-            } else if (isSpecialUnresolved(t)) {
-                // error type or unresolved type is subtype of everything
-                if (s instanceof JArrayType) {
-                    // In case the array has an ivar 'a as element type, a bound will be added 'a >: (*unknown*)
-                    // This helps inference recover in call chains and propagate the (*unknown*) types gracefully.
-                    return TypeOps.isConvertible(t, ((JArrayType) s).getElementType());
-                }
-                return Convertibility.SUBTYPING;
-            } else if (hasUnresolvedSymbol(t) && t instanceof JClassType) {
+            } else if (hasUnresolvedSymbol(t)) {
                 // This also considers types with an unresolved symbol
                 // subtypes of (nearly) anything. This allows them to
                 // pass bound checks on type variables.
@@ -717,6 +710,12 @@ public final class TypeOps {
                 // no unchecked warning.
                 return allArgsAreUnboundedWildcards(sargs) ? Convertibility.UNCHECKED_NO_WARNING
                                                            : Convertibility.UNCHECKED_WARNING;
+            } else if (sargs.isEmpty()) {
+                // C<T1...TN> <: |C|
+                // JLS 4.10.2
+                // unchecked conversion converts a raw type to a generic type
+                // subtyping converts a generic type to its raw type
+                return Convertibility.SUBTYPING;
             }
 
             if (targs.size() != sargs.size()) {
@@ -803,7 +802,10 @@ public final class TypeOps {
         public Convertibility visitTypeVar(JTypeVar t, JTypeMirror s) {
             if (s instanceof JTypeVar && t.getSymbol() != null && Objects.equals(t.getSymbol(), s.getSymbol())) {
                 return Convertibility.SUBTYPING;
+            } else if (s instanceof SentinelType) {
+                return Convertibility.SUBTYPING;
             }
+
             if (isTypeRange(s)) {
                 return isConvertible(t, lowerBoundRec(s));
             }
@@ -817,9 +819,17 @@ public final class TypeOps {
 
         @Override
         public Convertibility visitSentinel(JTypeMirror t, JTypeMirror s) {
+            // t may be (*unknown*), (*error*) or void
             // we know t != s
-            return t.isVoid() ? Convertibility.NEVER
-                              : Convertibility.SUBTYPING;
+            if (t.isVoid()) {
+                return Convertibility.NEVER;
+            }
+            // unknown and error are subtypes of everything.
+            // however we want them to add constrains on unknown
+            if (!pure && !(s instanceof SentinelType)) {
+                s.acceptVisitor(this, t);
+            }
+            return Convertibility.SUBTYPING;
         }
 
         @Override
@@ -842,6 +852,14 @@ public final class TypeOps {
 
         @Override
         public Convertibility visitClass(JClassType t, JTypeMirror s) {
+            if (isSpecialUnresolved(s)) {
+                if (!pure) {
+                    for (JTypeMirror arg : t.getTypeArgs()) {
+                        typeArgContains(arg, s);
+                    }
+                }
+                return Convertibility.SUBTYPING;
+            }
             if (!(s instanceof JClassType)) {
                 // note, that this ignores wildcard types,
                 // because they're only compared through
@@ -890,6 +908,12 @@ public final class TypeOps {
         public Convertibility visitArray(JArrayType t, JTypeMirror s) {
             TypeSystem ts = t.getTypeSystem();
             if (s == ts.OBJECT || s.equals(ts.CLONEABLE) || s.equals(ts.SERIALIZABLE)) {
+                return Convertibility.SUBTYPING;
+            }
+            if (isSpecialUnresolved(s)) {
+                if (!pure) {
+                    t.getElementType().acceptVisitor(this, s);
+                }
                 return Convertibility.SUBTYPING;
             }
 
@@ -1091,14 +1115,10 @@ public final class TypeOps {
         <T extends JTypeMirror> JTypeMirror recurseIfNotDone(T t, BiFunction<T, RecursionStop, JTypeMirror> body) {
             if (t instanceof JTypeVar) {
                 JTypeVar var = (JTypeVar) t;
-                try {
-                    if (isAbsent(var)) {
-                        return body.apply(t, this);
-                    } else {
-                        return t;
-                    }
-                } finally {
-                    set.remove(var);
+                if (isAbsent(var)) {
+                    return body.apply(t, this);
+                } else {
+                    return t;
                 }
             } else {
                 return body.apply(t, this);
@@ -1174,6 +1194,13 @@ public final class TypeOps {
                     } else if (!upwards) {
                         // If Ai is a type that mentions a restricted type variable, then Ai' is undefined.
                         return NO_DOWN_PROJECTION;
+                    } else if (u instanceof JWildcardType) {
+                        // The rest of this function, below, treats u as the bound of a wildcard,
+                        // but if u is already a wildcard (and therefore ai was a wildcard), we
+                        // are already done.
+                        newTargs.add(u);
+                        change = true;
+                        continue;
                     }
 
                     change = true;
@@ -1658,7 +1685,7 @@ public final class TypeOps {
      * Return the base type of t or any of its outer types that starts
      * with the given type.  If none exists, return null.
      */
-    public static JClassType asOuterSuper(JTypeMirror t, JClassSymbol sym) {
+    public static @Nullable JClassType asOuterSuper(JTypeMirror t, JClassSymbol sym) {
         if (t instanceof JClassType) {
             JClassType ct = (JClassType) t;
             do {
@@ -1671,6 +1698,23 @@ public final class TypeOps {
         } else if (t instanceof JTypeVar || t instanceof JArrayType) {
             return (JClassType) t.getAsSuper(sym);
         }
+        return null;
+    }
+
+    /**
+     * Return the first enclosing type of the container type
+     * that has the given symbol in its supertypes. Return null
+     * if this is not found.
+     */
+    public static @Nullable JClassType getReceiverType(@NonNull JClassType containerType, JClassSymbol sym) {
+        JClassType ct = containerType;
+        do {
+            JClassType sup = ct.getAsSuper(sym);
+            if (sup != null) {
+                return ct;
+            }
+            ct = ct.getEnclosingType();
+        } while (ct != null);
         return null;
     }
 
@@ -1757,8 +1801,8 @@ public final class TypeOps {
         vLoop:
         for (JTypeMirror v : set) {
             for (JTypeMirror w : set) {
-                if (!w.equals(v) && !hasUnresolvedSymbol(w)) {
-                    Convertibility isConvertible = isConvertiblePure(w, v);
+                if (!w.equals(v) && !hasUnresolvedSymbolOrArray(w)) {
+                    Convertibility isConvertible = isConvertibleNoCapture(w, v);
                     if (isConvertible.bySubtyping()
                         // This last case covers unchecked conversion. It is made antisymmetric by the
                         // test for a symbol. eg |G| <~> G<?> so it would fail.
@@ -1895,6 +1939,18 @@ public final class TypeOps {
         return CollectionUtil.mapNotNull(visible, m -> isAccessible(m.getSymbol(), accessSite) ? m : null);
     }
 
+    /**
+     * Methods and fields of a type variable come from its upper bound, which must be captured.
+     * Capturing a type var does NOT capture its upper bound, so we must treat this
+     * case here.
+     */
+    public static JTypeMirror getMemberSource(JTypeMirror t) {
+        if (t instanceof JTypeVar) {
+            JTypeVar tv = (JTypeVar) t;
+            return capture(tv.getUpperBound());
+        }
+        return capture(t);
+    }
 
     public static List<JMethodSig> getMethodsOf(JTypeMirror type, String name, boolean staticOnly, @NonNull JClassSymbol enclosing) {
         if (staticOnly && type.isInterface()) {
@@ -2039,7 +2095,8 @@ public final class TypeOps {
 
     /**
      * Returns true if the type is {@link TypeSystem#UNKNOWN},
-     * {@link TypeSystem#ERROR}, or its symbol is unresolved.
+     * {@link TypeSystem#ERROR}, or a class type with unresolved
+     * symbol.
      *
      * @param t Non-null type
      *
@@ -2049,31 +2106,105 @@ public final class TypeOps {
         return isSpecialUnresolved(t) || hasUnresolvedSymbol(t);
     }
 
+    /**
+     * Returns true if the type is {@link TypeSystem#UNKNOWN},
+     * or {@link TypeSystem#ERROR}, or a class type with unresolved
+     * symbol, or an array of such types.
+     *
+     * @param t Non-null type
+     *
+     * @throws NullPointerException if the parameter is null
+     */
+    public static boolean isUnresolvedOrArray(@NonNull JTypeMirror t) {
+        return isSpecialUnresolvedOrArray(t) || hasUnresolvedSymbolOrArray(t);
+    }
+
+    /**
+     * Returns true if the type is {@link TypeSystem#UNKNOWN},
+     * or {@link TypeSystem#ERROR}.
+     *
+     * @param t Non-null type
+     *
+     * @throws NullPointerException if the parameter is null
+     */
     public static boolean isSpecialUnresolved(@NonNull JTypeMirror t) {
         TypeSystem ts = t.getTypeSystem();
         return t == ts.UNKNOWN || t == ts.ERROR;
     }
 
     /**
+     * Returns true if the type is {@link TypeSystem#UNKNOWN},
+     * or {@link TypeSystem#ERROR}, or an array of such types.
+     *
+     * @param t Non-null type
+     *
+     * @throws NullPointerException if the parameter is null
+     */
+    public static boolean isSpecialUnresolvedOrArray(@Nullable JTypeMirror t) {
+        return t == null
+            || isSpecialUnresolved(t)
+            || t instanceof JArrayType && isSpecialUnresolved(((JArrayType) t).getElementType());
+    }
+
+    /**
      * Return true if the argument is a {@link JClassType} with
-     * {@linkplain JClassSymbol#isUnresolved() an unresolved symbol} or
-     * a {@link JArrayType} whose element type matches the first criterion.
+     * {@linkplain JClassSymbol#isUnresolved() an unresolved symbol}.
      */
     public static boolean hasUnresolvedSymbol(@Nullable JTypeMirror t) {
+        return t instanceof JClassType && t.getSymbol().isUnresolved();
+    }
+
+    /**
+     * Return true if the argument is a {@link JClassType} with
+     * {@linkplain JClassSymbol#isUnresolved() an unresolved symbol},
+     * or an array whose element type has an unresolved symbol.
+     */
+    public static boolean hasUnresolvedSymbolOrArray(@Nullable JTypeMirror t) {
         if (!(t instanceof JClassType)) {
             return t instanceof JArrayType && hasUnresolvedSymbol(((JArrayType) t).getElementType());
         }
-        return t.getSymbol() != null && t.getSymbol().isUnresolved();
+        return hasUnresolvedSymbol(t);
     }
 
     public static boolean isUnresolvedOrNull(@Nullable JTypeMirror t) {
         return t == null || isUnresolved(t);
     }
 
-
     public static @Nullable JTypeMirror getArrayComponent(@Nullable JTypeMirror t) {
         return t instanceof JArrayType ? ((JArrayType) t).getComponentType() : null;
     }
 
+
+    /**
+     * Return true if the method is context dependent. That
+     * means its return type is influenced by the surrounding
+     * context during type inference. Generic constructors
+     * are always context dependent.
+     *
+     * @deprecated Since 7.11.0. Use {@link #isContextDependent(JExecutableSymbol)} instead which is more flexible.
+     */
+    @Deprecated
+    public static boolean isContextDependent(JMethodSig sig) {
+        return isContextDependent(sig.getSymbol());
+    }
+
+    /**
+     * Return true if the method is context dependent. That
+     * means its return type is influenced by the surrounding
+     * context during type inference. Generic constructors
+     * are always context dependent.
+     */
+    public static boolean isContextDependent(JExecutableSymbol symbol) {
+        if (symbol.isGeneric() || symbol.getEnclosingClass().isGeneric()) {
+            if (symbol instanceof JMethodSymbol) {
+                JTypeMirror returnType = ((JMethodSymbol) symbol).getReturnType(EMPTY);
+                return mentionsAny(returnType, symbol.getTypeParameters())
+                    || mentionsAny(returnType, symbol.getEnclosingClass().getTypeParameters());
+            }
+            // generic ctors are context dependent
+            return true;
+        }
+        return false;
+    }
     // </editor-fold>
 }

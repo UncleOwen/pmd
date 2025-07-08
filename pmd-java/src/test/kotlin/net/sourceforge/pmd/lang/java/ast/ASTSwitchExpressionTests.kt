@@ -5,27 +5,25 @@
 package net.sourceforge.pmd.lang.java.ast
 
 import io.kotest.matchers.shouldBe
-import net.sourceforge.pmd.lang.test.ast.shouldBe
-import net.sourceforge.pmd.lang.test.ast.shouldMatchN
 import net.sourceforge.pmd.lang.java.ast.BinaryOp.*
-import net.sourceforge.pmd.lang.java.ast.JavaVersion.*
 import net.sourceforge.pmd.lang.java.ast.JavaVersion.Companion.Earliest
 import net.sourceforge.pmd.lang.java.ast.JavaVersion.Companion.Latest
-import net.sourceforge.pmd.lang.java.ast.UnaryOp.UNARY_MINUS
+import net.sourceforge.pmd.lang.java.ast.JavaVersion.J14
+import net.sourceforge.pmd.lang.java.ast.UnaryOp.*
+import net.sourceforge.pmd.lang.java.types.JPrimitiveType.PrimitiveTypeKind
+import net.sourceforge.pmd.lang.test.ast.shouldBe
+import net.sourceforge.pmd.lang.test.ast.shouldMatchN
 
 
 /**
  * @author Clément Fournier
  */
 class ASTSwitchExpressionTests : ParserTestSpec({
-
     val switchVersions = JavaVersion.since(J14)
     val notSwitchVersions = JavaVersion.except(switchVersions)
 
-    parserTest("No switch expr before j13 preview", javaVersions = notSwitchVersions) {
+    parserTestContainer("No switch expr before j13 preview", javaVersions = notSwitchVersions) {
         inContext(ExpressionParsingCtx) {
-
-
             """
             switch (day) {
                 case FRIDAY, SUNDAY -> 6;
@@ -39,16 +37,11 @@ class ASTSwitchExpressionTests : ParserTestSpec({
             }
         """ shouldNot parse()
         }
-
     }
 
 
-    parserTest("Simple switch expressions", javaVersions = switchVersions) {
-
-
+    parserTestContainer("Simple switch expressions", javaVersions = switchVersions) {
         inContext(ExpressionParsingCtx) {
-
-
             """
             switch (day) {
                 case FRIDAY, SUNDAY -> 6;
@@ -103,12 +96,8 @@ class ASTSwitchExpressionTests : ParserTestSpec({
         }
     }
 
-
-
-    parserTest("Non-trivial labels", javaVersions = switchVersions) {
+    parserTestContainer("Non-trivial labels", javaVersions = switchVersions) {
         inContext(ExpressionParsingCtx) {
-
-
             """ 
             switch (day) {
                 case a + b, 4 * 2 / Math.PI -> 6;
@@ -138,11 +127,8 @@ class ASTSwitchExpressionTests : ParserTestSpec({
         }
     }
 
-    parserTest("Switch expr precedence", javaVersions = switchVersions) {
-
-
+    parserTestContainer("Switch expr precedence", javaVersions = switchVersions) {
         inContext(ExpressionParsingCtx) {
-
             "2 * switch (day) {default -> 6;}" should parseAs {
                 infixExpr(MUL) {
                     number()
@@ -171,11 +157,8 @@ class ASTSwitchExpressionTests : ParserTestSpec({
         }
     }
 
-
-    parserTest("Nested switch expressions", javaVersions = switchVersions) {
-
+    parserTestContainer("Nested switch expressions", javaVersions = switchVersions) {
         inContext(ExpressionParsingCtx) {
-
             """
             switch (day) {
                 case FRIDAY -> 6;
@@ -186,13 +169,10 @@ class ASTSwitchExpressionTests : ParserTestSpec({
                 default             -> 3;
             }
         """.trimIndent() should parseAs {
-
                 switchExpr {
                     it::getTestedExpression shouldBe variableAccess("day")
 
-
                     it.branches.toList() shouldBe listOf(
-
                             switchArrow {
                                 switchLabel {
                                     variableAccess("FRIDAY")
@@ -231,11 +211,8 @@ class ASTSwitchExpressionTests : ParserTestSpec({
         }
     }
 
-
-    parserTest("Test yield expressions", javaVersions = JavaVersion.since(J14)) {
-
+    parserTestContainer("Test yield expressions", javaVersions = JavaVersion.since(J14)) {
         inContext(ExpressionParsingCtx) {
-
             """
             switch (day) {
                 case FRIDAY -> 6;
@@ -250,9 +227,7 @@ class ASTSwitchExpressionTests : ParserTestSpec({
                 }
             }
         """.trimIndent() should parseAs {
-
                 switchExpr {
-
                     val outerYields = mutableListOf<ASTExpression>()
 
                     it::getTestedExpression shouldBe variableAccess("day")
@@ -314,10 +289,55 @@ class ASTSwitchExpressionTests : ParserTestSpec({
         }
     }
 
-    parserTest("Non-fallthrough nested in fallthrough", javaVersions = switchVersions) {
+    parserTestContainer("Test yield expressions negated (#5645)", javaVersions = JavaVersion.since(J14)) {
+        inContext(ExpressionParsingCtx) {
+            """
+            switch (day) {
+                case ONE: 
+                    yield !true;
+                    yield ~0;
+                    yield +2;
+                    yield -2;
+                    yield --foo;
+                    yield ++foo;
+                    yield void.class;
+                    yield double.class; yield float.class;
+                    yield long.class; yield int.class; yield short.class; 
+                    yield char.class; yield byte.class;
+                    yield boolean.class;
+            }
+        """.trimIndent() should parseAs {
+                switchExpr {
 
+                    it::getTestedExpression shouldBe variableAccess("day")
+
+                    switchFallthrough {
+                        switchLabel {
+                            variableAccess("ONE")
+                        }
+                        yieldStatement { unaryExpr(NEGATION) { boolean(true) } }
+                        yieldStatement { unaryExpr(COMPLEMENT) { int(0) } }
+                        yieldStatement { unaryExpr(UNARY_PLUS) { int(2) } }
+                        yieldStatement { unaryExpr(UNARY_MINUS) { int(2) } }
+                        yieldStatement { unaryExpr(PRE_DECREMENT) { variableAccess("foo") } }
+                        yieldStatement { unaryExpr(PRE_INCREMENT) { variableAccess("foo") } }
+                        yieldStatement { classLiteral { voidType() } }
+                        yieldStatement { classLiteral { primitiveType(PrimitiveTypeKind.DOUBLE) } }
+                        yieldStatement { classLiteral { primitiveType(PrimitiveTypeKind.FLOAT) } }
+                        yieldStatement { classLiteral { primitiveType(PrimitiveTypeKind.LONG) } }
+                        yieldStatement { classLiteral { primitiveType(PrimitiveTypeKind.INT) } }
+                        yieldStatement { classLiteral { primitiveType(PrimitiveTypeKind.SHORT) } }
+                        yieldStatement { classLiteral { primitiveType(PrimitiveTypeKind.CHAR) } }
+                        yieldStatement { classLiteral { primitiveType(PrimitiveTypeKind.BYTE) } }
+                        yieldStatement { classLiteral { primitiveType(PrimitiveTypeKind.BOOLEAN) } }
+                    }
+                }
+            }
+        }
+    }
+
+    parserTestContainer("Non-fallthrough nested in fallthrough", javaVersions = switchVersions) {
         inContext(StatementParsingCtx) {
-
             """
             switch (day) {
                 case FRIDAY: foo(); break;
@@ -370,9 +390,7 @@ class ASTSwitchExpressionTests : ParserTestSpec({
         }
     }
 
-
-    parserTest("Switch statement with non-fallthrough labels", javaVersions = switchVersions) {
-
+    parserTestContainer("Switch statement with non-fallthrough labels", javaVersions = switchVersions) {
         inContext(StatementParsingCtx) {
             """
         switch (day) {
@@ -381,9 +399,7 @@ class ASTSwitchExpressionTests : ParserTestSpec({
         }
         """ should parseAs {
                 switchStmt {
-
                     it::getTestedExpression shouldBe variableAccess("day")
-
 
                     switchArrow {
                         switchLabel {
@@ -403,8 +419,7 @@ class ASTSwitchExpressionTests : ParserTestSpec({
         }
     }
 
-    parserTest("Fallthrough switch statement", javaVersions = Earliest..Latest) {
-
+    parserTestContainer("Fallthrough switch statement", javaVersions = Earliest..Latest) {
         inContext(StatementParsingCtx) {
             """
           switch (day) {
@@ -414,7 +429,6 @@ class ASTSwitchExpressionTests : ParserTestSpec({
           }
         """ should parseAs {
                 switchStmt {
-
                     val switch = it
 
                     it::getTestedExpression shouldBe variableAccess("day")
@@ -447,6 +461,4 @@ class ASTSwitchExpressionTests : ParserTestSpec({
             }
         }
     }
-
-
 })

@@ -47,7 +47,7 @@ public class JavaComment implements Reportable {
     }
 
     public boolean hasJavadocContent() {
-        return token.kind == JavaTokenKinds.FORMAL_COMMENT;
+        return token.kind == JavaTokenKinds.FORMAL_COMMENT || JavaAstUtils.isMarkdownComment(token);
     }
 
     /** Returns the full text of the comment. */
@@ -65,7 +65,7 @@ public class JavaComment implements Reportable {
 
     /**
      * Removes the leading comment marker (like {@code *}) of each line
-     * of the comment as well as the start marker ({@code //}, {@code /*} or {@code /**}
+     * of the comment as well as the start marker ({@code //}, {@code /*}, {@code /**} or {@code ///}
      * and the end markers (<code>&#x2a;/</code>).
      *
      * <p>Empty lines are removed.
@@ -94,11 +94,11 @@ public class JavaComment implements Reportable {
      * True if this is a comment delimiter or an asterisk. This
      * tests the whole parameter and not a prefix/suffix.
      */
-    @SuppressWarnings("PMD.LiteralsFirstInComparisons") // a fp
     public static boolean isMarkupWord(Chars word) {
         return word.length() <= 3
             && (word.contentEquals("*")
             || word.contentEquals("//")
+            || word.contentEquals("///")
             || word.contentEquals("/*")
             || word.contentEquals("*/")
             || word.contentEquals("/**"));
@@ -106,13 +106,14 @@ public class JavaComment implements Reportable {
 
     /**
      * Trim the start of the provided line to remove a comment
-     * markup opener ({@code //, /*, /**, *}) or closer {@code * /}.
+     * markup opener ({@code //, ///, /*, /**, *}) or closer <code>&#x2a;/</code>.
      */
     public static Chars removeCommentMarkup(Chars line) {
         line = line.trim().removeSuffix("*/");
         int subseqFrom = 0;
         if (line.startsWith('/', 0)) {
-            if (line.startsWith("**", 1)) {
+            if (line.startsWith("**", 1)
+                || line.startsWith("//", 1)) {
                 subseqFrom = 3;
             } else if (line.startsWith('/', 1)
                 || line.startsWith('*', 1)) {
@@ -130,9 +131,9 @@ public class JavaComment implements Reportable {
     }
 
     public static Stream<JavaComment> getLeadingComments(JavaNode node) {
-        Stream<JavaccToken> specialTokens;
+        Stream<JavaccToken> specialTokens = getSpecialTokensIn(node);
         
-        if (node instanceof ModifierOwner) {
+        if (node instanceof ModifierOwner && !(node instanceof ASTConstructorDeclaration)) {
             node = ((ModifierOwner) node).getModifiers();
             specialTokens = getSpecialTokensIn(node);
             
@@ -140,8 +141,6 @@ public class JavaComment implements Reportable {
             if (!node.getFirstToken().isImplicit()) {
                 specialTokens = Stream.concat(specialTokens, getSpecialTokensIn(node.getNextSibling()));
             }
-        } else {
-            specialTokens = getSpecialTokensIn(node);
         }
         
         return specialTokens.filter(JavaComment::isComment)
