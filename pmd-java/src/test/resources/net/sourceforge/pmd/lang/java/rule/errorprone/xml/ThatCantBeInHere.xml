@@ -4,4 +4,269 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests http://pmd.sourceforge.net/rule-tests_1_0_0.xsd">
 
+    <test-code>
+        <description>Collection.contains with incompatible type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testContains(Collection<Integer> collection, String stringParam) {
+        collection.contains(stringParam); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Collection.remove with incompatible type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testRemove(Collection<Integer> collection, String stringParam) {
+        collection.remove(stringParam); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Collection.removeAll with incompatible type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testRemoveAll(Collection<Integer> collection, Collection<String> stringCollection) {
+        collection.removeAll(stringCollection); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Collection.retainAll with incompatible type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testRetainAll(Collection<Integer> collection, Collection<String> stringCollection) {
+        collection.retainAll(stringCollection); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Collection.containsAll with incompatible type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testContainsAll(Collection<Integer> collection, Collection<String> stringCollection) {
+        collection.containsAll(stringCollection); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>List.indexOf with incompatible type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testIndexOf(List<Integer> list, String stringParam) {
+        list.indexOf(stringParam); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>List.lastIndexOf with incompatible type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testLastIndexOf(List<Integer> list, String stringParam) {
+        list.lastIndexOf(stringParam); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Deque.removeFirstOccurrence with incompatible type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testRemoveFirstOccurrence(Deque<Integer> deque, String stringParam) {
+        deque.removeFirstOccurrence(stringParam); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Deque.removeLastOccurrence with incompatible type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testRemoveLastOccurrence(Deque<Integer> deque, String stringParam) {
+        deque.removeLastOccurrence(stringParam); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Map.containsKey with incompatible type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testContainsKey(Map<Integer, String> map, String stringParam) {
+        map.containsKey(stringParam); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Map.containsValue with incompatible type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testContainsValue(Map<String, Integer> map, String stringParam) {
+        map.containsValue(stringParam); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Map.get with incompatible key type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testGet(Map<Integer, String> map, String stringParam) {
+        map.get(stringParam); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Map.getOrDefault with incompatible key type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testGetOrDefault(Map<Integer, String> map, String stringParam, String defaultValue) {
+        map.getOrDefault(stringParam, defaultValue); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Map.remove with incompatible key type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testRemove(Map<Integer, String> map, String stringParam) {
+        map.remove(stringParam); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Map.remove with incompatible key type (2-parameter)</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testRemoveIncompatibleKey(Map<Integer, String> map, String keyParam, String valueParam) {
+        map.remove(keyParam, valueParam); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Map.remove with incompatible value type (2-parameter)</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testRemoveIncompatibleValue(Map<Integer, String> map, Integer keyParam, Integer valueParam) {
+        map.remove(keyParam, valueParam); // violation
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Valid case - compatible types should not trigger violation</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testValidCases(
+        List<Integer> list, Set<String> set, Map<Integer, String> map,
+        Integer intParam, String stringParam, Collection<Integer> intCollection
+    ) {
+        list.contains(intParam);
+        list.remove(intParam);
+        list.indexOf(intParam);
+        set.contains(stringParam);
+        set.remove(stringParam);
+        list.removeAll(intCollection);
+        map.containsKey(intParam);
+        map.containsValue(stringParam);
+        map.get(intParam);
+    }
+}
+        ]]></code>
+    </test-code>
+
 </test-data>
