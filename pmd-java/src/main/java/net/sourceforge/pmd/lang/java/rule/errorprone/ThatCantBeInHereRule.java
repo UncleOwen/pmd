@@ -4,8 +4,15 @@
 
 package net.sourceforge.pmd.lang.java.rule.errorprone;
 
+import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
+import net.sourceforge.pmd.lang.java.types.InvocationMatcher;
+import net.sourceforge.pmd.lang.java.types.JClassType;
+import net.sourceforge.pmd.lang.java.types.JTypeMirror;
+import net.sourceforge.pmd.lang.java.types.TypeOps;
+import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
+import net.sourceforge.pmd.reporting.RuleContext;
 
 /**
  * Detects method calls on collections where the passed object cannot possibly be in the collection
@@ -18,12 +25,211 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
  */
 public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
 
+    // Collection methods that take a single Object parameter
+    private static final InvocationMatcher COLLECTION_CONTAINS = InvocationMatcher.parse("java.util.Collection#contains(java.lang.Object)");
+    private static final InvocationMatcher COLLECTION_REMOVE = InvocationMatcher.parse("java.util.Collection#remove(java.lang.Object)");
+    private static final InvocationMatcher LIST_INDEX_OF = InvocationMatcher.parse("java.util.List#indexOf(java.lang.Object)");
+    private static final InvocationMatcher LIST_LAST_INDEX_OF = InvocationMatcher.parse("java.util.List#lastIndexOf(java.lang.Object)");
+    private static final InvocationMatcher DEQUE_REMOVE_FIRST_OCCURRENCE = InvocationMatcher.parse("java.util.Deque#removeFirstOccurrence(java.lang.Object)");
+    private static final InvocationMatcher DEQUE_REMOVE_LAST_OCCURRENCE = InvocationMatcher.parse("java.util.Deque#removeLastOccurrence(java.lang.Object)");
+    
+    // Collection methods that take a Collection parameter  
+    private static final InvocationMatcher COLLECTION_REMOVE_ALL = InvocationMatcher.parse("java.util.Collection#removeAll(java.util.Collection)");
+    private static final InvocationMatcher COLLECTION_RETAIN_ALL = InvocationMatcher.parse("java.util.Collection#retainAll(java.util.Collection)");
+    private static final InvocationMatcher COLLECTION_CONTAINS_ALL = InvocationMatcher.parse("java.util.Collection#containsAll(java.util.Collection)");
+    
+    // Map methods that take key parameters
+    private static final InvocationMatcher MAP_CONTAINS_KEY = InvocationMatcher.parse("java.util.Map#containsKey(java.lang.Object)");
+    private static final InvocationMatcher MAP_GET = InvocationMatcher.parse("java.util.Map#get(java.lang.Object)");
+    private static final InvocationMatcher MAP_GET_OR_DEFAULT = InvocationMatcher.parse("java.util.Map#getOrDefault(java.lang.Object,_)");
+    private static final InvocationMatcher MAP_REMOVE_ONE_PARAM = InvocationMatcher.parse("java.util.Map#remove(java.lang.Object)");
+    
+    // Map methods that take value parameters
+    private static final InvocationMatcher MAP_CONTAINS_VALUE = InvocationMatcher.parse("java.util.Map#containsValue(java.lang.Object)");
+    
+    // Map methods that take key-value parameters
+    private static final InvocationMatcher MAP_REMOVE_TWO_PARAM = InvocationMatcher.parse("java.util.Map#remove(java.lang.Object,java.lang.Object)");
+
     public ThatCantBeInHereRule() {
         super(ASTMethodCall.class);
     }
 
     @Override
     public Object visit(ASTMethodCall node, Object data) {
+        RuleContext ctx = (RuleContext) data;
+
+        if (COLLECTION_CONTAINS.matchesCall(node)
+                || COLLECTION_REMOVE.matchesCall(node)
+                || LIST_INDEX_OF.matchesCall(node)
+                || LIST_LAST_INDEX_OF.matchesCall(node)
+                || DEQUE_REMOVE_FIRST_OCCURRENCE.matchesCall(node)
+                || DEQUE_REMOVE_LAST_OCCURRENCE.matchesCall(node)
+        ) {
+            checkCollectionElementCompatibility(node, ctx);
+        } else if (COLLECTION_REMOVE_ALL.matchesCall(node)
+                || COLLECTION_RETAIN_ALL.matchesCall(node)
+                || COLLECTION_CONTAINS_ALL.matchesCall(node)
+        ) {
+            checkCollectionToCollectionCompatibility(node, ctx);
+        } else if (MAP_CONTAINS_KEY.matchesCall(node)
+                || MAP_GET.matchesCall(node)
+                || MAP_GET_OR_DEFAULT.matchesCall(node)
+                || MAP_REMOVE_ONE_PARAM.matchesCall(node)
+        ) {
+            checkMapKeyCompatibility(node, ctx);
+        } else if (MAP_CONTAINS_VALUE.matchesCall(node)) {
+            checkMapValueCompatibility(node, ctx);
+        } else if (MAP_REMOVE_TWO_PARAM.matchesCall(node)) {
+            checkMapKeyValueCompatibility(node, ctx);
+        }
+        
         return null;
+    }
+    
+    private void checkCollectionElementCompatibility(ASTMethodCall node, RuleContext ctx) {
+        JTypeMirror qualifierType = getQualifierType(node);
+        if (!(qualifierType instanceof JClassType)) {
+            return;
+        }
+        
+        JTypeMirror elementType = getCollectionElementType((JClassType) qualifierType);
+        if (elementType == null) {
+            return;
+        }
+        
+        ASTExpression firstArg = getFirstArgument(node);
+        JTypeMirror argType = firstArg.getTypeMirror();
+        if (!isCompatibleType(argType, elementType)) {
+            ctx.addViolation(node, argType.toString(), elementType.toString());
+        }
+    }
+    
+    private void checkCollectionToCollectionCompatibility(ASTMethodCall node, RuleContext ctx) {
+        JTypeMirror qualifierType = getQualifierType(node);
+        if (!(qualifierType instanceof JClassType)) {
+            return;
+        }
+        
+        JTypeMirror elementType = getCollectionElementType((JClassType) qualifierType);
+        if (elementType == null) {
+            return;
+        }
+        
+        ASTExpression firstArg = getFirstArgument(node);
+        JTypeMirror argType = firstArg.getTypeMirror();
+        if (argType instanceof JClassType && isCollectionType((JClassType) argType)) {
+            JTypeMirror argElementType = getCollectionElementType((JClassType) argType);
+            if (argElementType != null && !isCompatibleType(argElementType, elementType)) {
+                ctx.addViolation(node, argElementType.toString(), elementType.toString());
+            }
+        }
+    }
+    
+    private void checkMapKeyCompatibility(ASTMethodCall node, RuleContext ctx) {
+        JTypeMirror qualifierType = getQualifierType(node);
+        if (!(qualifierType instanceof JClassType)) {
+            return;
+        }
+        
+        JTypeMirror keyType = getMapKeyType((JClassType) qualifierType);
+        if (keyType == null) {
+            return;
+        }
+        
+        ASTExpression firstArg = getFirstArgument(node);
+        JTypeMirror argType = firstArg.getTypeMirror();
+        if (!isCompatibleType(argType, keyType)) {
+            ctx.addViolation(node, argType.toString(), keyType.toString());
+        }
+    }
+    
+    private void checkMapValueCompatibility(ASTMethodCall node, RuleContext ctx) {
+        JTypeMirror qualifierType = getQualifierType(node);
+        if (!(qualifierType instanceof JClassType)) {
+            return;
+        }
+        
+        JTypeMirror valueType = getMapValueType((JClassType) qualifierType);
+        if (valueType == null) {
+            return;
+        }
+        
+        ASTExpression firstArg = getFirstArgument(node);
+        JTypeMirror argType = firstArg.getTypeMirror();
+        if (!isCompatibleType(argType, valueType)) {
+            ctx.addViolation(node, argType.toString(), valueType.toString());
+        }
+    }
+    
+    private void checkMapKeyValueCompatibility(ASTMethodCall node, RuleContext ctx) {
+        JTypeMirror qualifierType = getQualifierType(node);
+        if (!(qualifierType instanceof JClassType)) {
+            return;
+        }
+        
+        JTypeMirror keyType = getMapKeyType((JClassType) qualifierType);
+        JTypeMirror valueType = getMapValueType((JClassType) qualifierType);
+        if (keyType == null || valueType == null) {
+            return;
+        }
+        
+        ASTExpression keyArg = getFirstArgument(node);
+        ASTExpression valueArg = getSecondArgument(node);
+        
+        JTypeMirror keyArgType = keyArg.getTypeMirror();
+        JTypeMirror valueArgType = valueArg.getTypeMirror();
+        
+        if (!isCompatibleType(keyArgType, keyType)) {
+            ctx.addViolation(node, keyArgType.toString(), keyType.toString());
+        } else if (!isCompatibleType(valueArgType, valueType)) {
+            ctx.addViolation(node, valueArgType.toString(), valueType.toString());
+        }
+    }
+    
+    private boolean isCollectionType(JClassType type) {
+        return TypeTestUtil.isA(java.util.Collection.class, type);
+    }
+    
+    private JTypeMirror getCollectionElementType(JClassType collectionType) {
+        if (collectionType.getTypeArgs().isEmpty()) {
+            return null;
+        }
+        return collectionType.getTypeArgs().get(0);
+    }
+    
+    private JTypeMirror getMapKeyType(JClassType mapType) {
+        if (mapType.getTypeArgs().isEmpty()) {
+            return null;
+        }
+        return mapType.getTypeArgs().get(0);
+    }
+    
+    private JTypeMirror getMapValueType(JClassType mapType) {
+        if (mapType.getTypeArgs().size() < 2) {
+            return null;
+        }
+        return mapType.getTypeArgs().get(1);
+    }
+    
+    private boolean isCompatibleType(JTypeMirror argType, JTypeMirror expectedType) {
+        if (argType == null || expectedType == null) {
+            return true; // Skip checking if we can't determine types
+        }
+        
+        // Check if the argument type is convertible to the expected type
+        // This includes subtyping, boxing/unboxing, and other implicit conversions
+        return TypeOps.isConvertible(argType, expectedType).somehow();
+    }
+    
+    private JTypeMirror getQualifierType(ASTMethodCall node) {
+        return node.getQualifier() != null ? node.getQualifier().getTypeMirror() : null;
+    }
+    
+    private ASTExpression getFirstArgument(ASTMethodCall node) {
+        return node.getArguments().get(0);
+    }
+
+    private ASTExpression getSecondArgument(ASTMethodCall node) {
+        return node.getArguments().get(1);
     }
 }
