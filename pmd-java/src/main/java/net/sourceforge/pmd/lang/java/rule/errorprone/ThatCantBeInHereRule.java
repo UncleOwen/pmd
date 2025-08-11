@@ -218,7 +218,14 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
         
         // Check if the argument type is convertible to the expected type
         // This includes subtyping, boxing/unboxing, and other implicit conversions
-        return TypeOps.isConvertible(argType, expectedType).somehow();
+        if (TypeOps.isConvertible(argType, expectedType).somehow()) {
+            return true;
+        }
+        
+        // Also check if the expected type is convertible to the argument type
+        // This handles cases where the argument is a supertype (e.g., Animal parameter for Dog collection)
+        // The dynamic type might be compatible even if the static type isn't
+        return TypeOps.isConvertible(expectedType, argType).somehow();
     }
     
     private JTypeMirror getQualifierType(ASTMethodCall node) {
