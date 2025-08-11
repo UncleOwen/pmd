@@ -291,4 +291,51 @@ public class Test {
         ]]></code>
     </test-code>
 
+    <test-code>
+        <description>Subtype compatibility - should not trigger violations</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    static class Animal {}
+    static class Dog extends Animal {}
+    static class Cat extends Animal {}
+    
+    void testSubtypeCompatibility(
+        Collection<Animal> animals, List<Number> numbers, Set<CharSequence> sequences, 
+        Deque<Object> objects, Dog dog, Integer intValue, String stringValue,
+        Collection<Dog> dogs, Collection<Integer> integers, Collection<String> strings,
+        Map<Animal, Number> animalToNumber, Map<CharSequence, Object> seqToObj
+    ) {
+        animals.contains(dog);
+        animals.remove(dog);
+        numbers.indexOf(intValue);
+        numbers.lastIndexOf(intValue);
+        sequences.contains(stringValue);
+        objects.removeFirstOccurrence(stringValue);
+        objects.removeLastOccurrence(intValue);
+        
+        animals.removeAll(dogs);
+        animals.retainAll(dogs);
+        animals.containsAll(dogs);
+        numbers.removeAll(integers);
+        sequences.containsAll(strings);
+        
+        animalToNumber.containsKey(dog);
+        animalToNumber.containsValue(intValue);
+        animalToNumber.get(dog);
+        animalToNumber.getOrDefault(dog, 0);
+        animalToNumber.remove(dog);
+        animalToNumber.remove(dog, intValue);
+        
+        seqToObj.containsKey(stringValue);
+        seqToObj.containsValue(stringValue);
+        seqToObj.get(stringValue);
+        seqToObj.remove(stringValue, intValue);
+    }
+}
+        ]]></code>
+    </test-code>
+
 </test-data>
