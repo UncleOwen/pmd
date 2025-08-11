@@ -269,4 +269,26 @@ public class Test {
         ]]></code>
     </test-code>
 
+    <test-code>
+        <description>Collection.add and Map.put should never trigger violations</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testAddAndPut(
+        Collection<Integer> intCollection, List<String> stringList, 
+        Map<Integer, String> map, Set<Double> doubleSet
+    ) {
+        intCollection.add(42);
+        stringList.add("hello");
+        doubleSet.add(3.14);
+        
+        map.put(123, "value");
+        map.put(456, "another");
+    }
+}
+        ]]></code>
+    </test-code>
+
 </test-data>
