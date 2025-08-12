@@ -461,4 +461,82 @@ public class Test {
         ]]></code>
     </test-code>
 
+    <test-code>
+        <description>Bounded generics with multiple violations</description>
+        <expected-problems>5</expected-problems>
+        <expected-linenumbers>12,13,14,17,18</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    static class Animal {}
+    static class Dog extends Animal {}
+    static class Cat extends Animal {}
+    
+    void testBoundedGenericsViolations(
+        List<? extends Animal> animals, Set<? super Dog> dogSupers,
+        Map<? extends Number, ? super String> numberToStringSuper, String stringParam, Integer intParam
+    ) {
+        animals.contains(stringParam); // violation - String not compatible with ? extends Animal
+        animals.remove(intParam); // violation - Integer not compatible with ? extends Animal  
+        animals.indexOf(stringParam); // violation - String not compatible with ? extends Animal
+        dogSupers.contains(stringParam); // no violation - String is compatible with Object (? super Dog → Object)
+        dogSupers.remove(intParam); // no violation - Integer is compatible with Object (? super Dog → Object)
+        numberToStringSuper.containsKey(stringParam); // violation - String not compatible with ? extends Number
+        numberToStringSuper.get(stringParam); // violation - String not compatible with ? extends Number
+        numberToStringSuper.containsValue(intParam); // no violation - Integer is compatible with Object (? super String → Object)
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Bounded generics with no violations</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    static class Animal {}
+    static class Dog extends Animal {}
+    static class Cat extends Animal {}
+    
+    void testBoundedGenericsNoViolations(
+        List<? extends Animal> animals, Set<? super Dog> dogSupers, 
+        Map<? extends Number, ? super String> numberToStringSuper,
+        Dog dog, Cat cat, Animal animal, Object obj, Integer intParam, Double doubleParam, 
+        String stringParam, CharSequence charSeq, Collection<? extends Animal> animalCollection
+    ) {
+        // Compatible with ? extends Animal
+        animals.contains(dog);
+        animals.contains(cat);
+        animals.contains(animal);
+        animals.remove(dog);
+        animals.indexOf(cat);
+        animals.lastIndexOf(animal);
+        
+        // Compatible with ? super Dog
+        dogSupers.contains(dog);
+        dogSupers.contains(animal);
+        dogSupers.contains(obj);
+        dogSupers.remove(dog);
+        
+        // Compatible collections
+        animals.removeAll(animalCollection);
+        animals.containsAll(animalCollection);
+        
+        // Compatible with ? extends Number keys and ? super String values
+        numberToStringSuper.containsKey(intParam);
+        numberToStringSuper.containsKey(doubleParam);
+        numberToStringSuper.get(intParam);
+        numberToStringSuper.containsValue(stringParam);
+        numberToStringSuper.containsValue(charSeq);
+        numberToStringSuper.containsValue(obj);
+        numberToStringSuper.remove(doubleParam);
+        numberToStringSuper.remove(intParam, stringParam);
+    }
+}
+        ]]></code>
+    </test-code>
+
 </test-data>

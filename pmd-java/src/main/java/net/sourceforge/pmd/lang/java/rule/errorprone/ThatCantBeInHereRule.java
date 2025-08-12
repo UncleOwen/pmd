@@ -10,7 +10,10 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
 import net.sourceforge.pmd.lang.java.types.InvocationMatcher;
 import net.sourceforge.pmd.lang.java.types.JClassType;
 import net.sourceforge.pmd.lang.java.types.JTypeMirror;
+import net.sourceforge.pmd.lang.java.types.JTypeVar;
+import net.sourceforge.pmd.lang.java.types.JWildcardType;
 import net.sourceforge.pmd.lang.java.types.TypeOps;
+import net.sourceforge.pmd.lang.java.types.TypeSystem;
 import net.sourceforge.pmd.lang.java.types.TypeTestUtil;
 import net.sourceforge.pmd.reporting.RuleContext;
 
@@ -192,19 +195,39 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
     
     private JTypeMirror getCollectionElementType(JClassType collectionType) {
         JClassType asSuperCollection = collectionType.getAsSuper(collectionType.getTypeSystem().getClassSymbol(java.util.Collection.class));
-        return asSuperCollection.getTypeArgs().get(0);
+        JTypeMirror elementType = asSuperCollection.getTypeArgs().get(0);
+        return resolveWildcardBound(elementType);
     }
     
     private JTypeMirror getMapKeyType(JClassType mapType) {
         JClassType asSuperMap = mapType.getAsSuper(mapType.getTypeSystem().getClassSymbol(java.util.Map.class));
-        return asSuperMap.getTypeArgs().get(0);
+        JTypeMirror keyType = asSuperMap.getTypeArgs().get(0);
+        return resolveWildcardBound(keyType);
     }
     
     private JTypeMirror getMapValueType(JClassType mapType) {
         JClassType asSuperMap = mapType.getAsSuper(mapType.getTypeSystem().getClassSymbol(java.util.Map.class));
-        return asSuperMap.getTypeArgs().get(1);
+        JTypeMirror valueType = asSuperMap.getTypeArgs().get(1);
+        return resolveWildcardBound(valueType);
+    }
+
+    private JTypeMirror resolveWildcardBound(JTypeMirror type) {
+        if (type instanceof JTypeVar && ((JTypeVar) type).isCaptured()) {
+            JWildcardType wildcard = ((JTypeVar) type).getCapturedOrigin();
+            if (wildcard != null) {
+                return resolveWildcard(wildcard, type.getTypeSystem());
+            }
+        }
+        
+        return type;
     }
     
+    private JTypeMirror resolveWildcard(JWildcardType wildcard, TypeSystem typeSystem) {
+        return wildcard.isUpperBound() 
+            ? wildcard.asUpperBound() 
+            : typeSystem.OBJECT;
+    }
+
     private boolean isCompatibleType(JTypeMirror argType, JTypeMirror expectedType) {
         if (argType == null || expectedType == null) {
             return true; // Skip checking if we can't determine types
