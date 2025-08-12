@@ -539,4 +539,26 @@ public class Test {
         ]]></code>
     </test-code>
 
+    <test-code>
+        <description>raw list</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class Test {
+    @SuppressWarnings("rawtypes")
+    private static class VList extends ArrayList {}
+    private static class VMap extends HashMap {}
+
+    void test(VList vs, VMap vm, Object v) {
+        vs.contains(v);
+        vm.containsKey(v);
+        vm.containsValue(v);
+        vm.remove(v,v);
+    }
+}
+        ]]></code>
+    </test-code>
+
 </test-data>

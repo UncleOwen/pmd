@@ -195,18 +195,30 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
     
     private JTypeMirror getCollectionElementType(JClassType collectionType) {
         JClassType asSuperCollection = collectionType.getAsSuper(collectionType.getTypeSystem().getClassSymbol(java.util.Collection.class));
+        if (asSuperCollection.getTypeArgs().isEmpty()) {
+            // Raw collection type without generics
+            return null;
+        }
         JTypeMirror elementType = asSuperCollection.getTypeArgs().get(0);
         return resolveWildcardBound(elementType);
     }
     
     private JTypeMirror getMapKeyType(JClassType mapType) {
         JClassType asSuperMap = mapType.getAsSuper(mapType.getTypeSystem().getClassSymbol(java.util.Map.class));
+        if (asSuperMap.getTypeArgs().isEmpty()) {
+            // Raw map type without generics
+            return null;
+        }
         JTypeMirror keyType = asSuperMap.getTypeArgs().get(0);
         return resolveWildcardBound(keyType);
     }
     
     private JTypeMirror getMapValueType(JClassType mapType) {
         JClassType asSuperMap = mapType.getAsSuper(mapType.getTypeSystem().getClassSymbol(java.util.Map.class));
+        if (asSuperMap.getTypeArgs().isEmpty()) {
+            // Raw map type without generics
+            return null;
+        }
         JTypeMirror valueType = asSuperMap.getTypeArgs().get(1);
         return resolveWildcardBound(valueType);
     }
