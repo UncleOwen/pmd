@@ -229,10 +229,6 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
     }
 
     private boolean isCompatibleType(JTypeMirror argType, JTypeMirror expectedType) {
-        if (argType == null || expectedType == null) {
-            return true; // Skip checking if we can't determine types
-        }
-        
         return TypeOps.isConvertible(argType, expectedType).somehow()
             || TypeOps.isConvertible(expectedType, argType).somehow();
     }
