@@ -385,4 +385,80 @@ public class Test {
         ]]></code>
     </test-code>
 
+    <test-code>
+        <description>MyList extends ArrayList - should detect incompatible type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>7</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    static class MyList extends ArrayList<String> {}
+    
+    void testMyListIncompatible(MyList myList, Integer intParam) {
+        myList.contains(intParam);
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>MyMap extends HashMap - should detect incompatible key type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>7</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    static class MyMap extends HashMap<Integer, String> {}
+    
+    void testMyMapIncompatibleKey(MyMap myMap, String stringParam) {
+        myMap.get(stringParam);
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>MyMap extends HashMap - should detect incompatible value type</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>7</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    static class MyMap extends HashMap<Integer, String> {}
+    
+    void testMyMapIncompatibleValue(MyMap myMap, Integer intParam) {
+        myMap.containsValue(intParam);
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>MyList and MyMap with compatible types - should not trigger violations</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    static class MyList extends ArrayList<String> {}
+    static class MyMap extends HashMap<Integer, String> {}
+    
+    void testMyCollectionsCompatible(MyList myList, MyMap myMap, String stringParam, Integer intParam) {
+        myList.contains(stringParam);
+        myList.remove(stringParam);
+        myList.indexOf(stringParam);
+        
+        myMap.get(intParam);
+        myMap.containsKey(intParam);
+        myMap.containsValue(stringParam);
+        myMap.remove(intParam);
+        myMap.remove(intParam, stringParam);
+    }
+}
+        ]]></code>
+    </test-code>
+
 </test-data>

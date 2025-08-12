@@ -191,24 +191,18 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
     }
     
     private JTypeMirror getCollectionElementType(JClassType collectionType) {
-        if (collectionType.getTypeArgs().isEmpty()) {
-            return null;
-        }
-        return collectionType.getTypeArgs().get(0);
+        JClassType asSuperCollection = collectionType.getAsSuper(collectionType.getTypeSystem().getClassSymbol(java.util.Collection.class));
+        return asSuperCollection.getTypeArgs().get(0);
     }
     
     private JTypeMirror getMapKeyType(JClassType mapType) {
-        if (mapType.getTypeArgs().isEmpty()) {
-            return null;
-        }
-        return mapType.getTypeArgs().get(0);
+        JClassType asSuperMap = mapType.getAsSuper(mapType.getTypeSystem().getClassSymbol(java.util.Map.class));
+        return asSuperMap.getTypeArgs().get(0);
     }
     
     private JTypeMirror getMapValueType(JClassType mapType) {
-        if (mapType.getTypeArgs().size() < 2) {
-            return null;
-        }
-        return mapType.getTypeArgs().get(1);
+        JClassType asSuperMap = mapType.getAsSuper(mapType.getTypeSystem().getClassSymbol(java.util.Map.class));
+        return asSuperMap.getTypeArgs().get(1);
     }
     
     private boolean isCompatibleType(JTypeMirror argType, JTypeMirror expectedType) {
@@ -216,12 +210,7 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
             return true; // Skip checking if we can't determine types
         }
         
-        // Check if the argument type is convertible to the expected type
-        // This includes subtyping, boxing/unboxing, and other implicit conversions
-        // Also check if the expected type is convertible to the argument type
-        // This handles cases where the argument is a supertype (e.g., Animal parameter for Dog collection)
-        // The dynamic type might be compatible even if the static type isn't
-        return TypeOps.isConvertible(argType, expectedType).somehow() 
+        return TypeOps.isConvertible(argType, expectedType).somehow()
             || TypeOps.isConvertible(expectedType, argType).somehow();
     }
     
