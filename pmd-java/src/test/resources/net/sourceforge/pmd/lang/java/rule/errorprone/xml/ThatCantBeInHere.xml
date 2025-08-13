@@ -561,4 +561,73 @@ public class Test {
         ]]></code>
     </test-code>
 
+    <test-code>
+        <description>Primitive to wrapper compatibility - should not trigger violations</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testPrimitiveToWrapper(
+        Collection<Integer> intCollection, List<Boolean> boolList, Set<Character> charSet,
+        Deque<Double> doubleDeque, Map<Long, Float> longToFloatMap,
+        int primitiveInt, boolean primitiveBool, char primitiveChar, 
+        double primitiveDouble, long primitiveLong, float primitiveFloat
+    ) {
+        // Collection methods with primitive arguments - should auto-box to wrapper
+        intCollection.contains(primitiveInt);
+        intCollection.remove(primitiveInt);
+        boolList.indexOf(primitiveBool);
+        boolList.lastIndexOf(primitiveBool);
+        charSet.contains(primitiveChar);
+        doubleDeque.removeFirstOccurrence(primitiveDouble);
+        doubleDeque.removeLastOccurrence(primitiveDouble);
+        
+        // Map methods with primitive arguments - should auto-box to wrapper
+        longToFloatMap.containsKey(primitiveLong);
+        longToFloatMap.containsValue(primitiveFloat);
+        longToFloatMap.get(primitiveLong);
+        longToFloatMap.getOrDefault(primitiveLong, primitiveFloat);
+        longToFloatMap.remove(primitiveLong);
+        longToFloatMap.remove(primitiveLong, primitiveFloat);
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Mismatched primitive to wrapper types - should trigger violations</description>
+        <expected-problems>13</expected-problems>
+        <expected-linenumbers>11,12,13,14,15,16,17,20,21,22,23,24,25</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testMismatchedPrimitiveToWrapper(
+        Collection<Integer> intCollection, List<Boolean> boolList, Set<Character> charSet,
+        Deque<Double> doubleDeque, Map<Long, Float> longToFloatMap,
+        long wrongLong, int wrongInt, double wrongDouble, float wrongFloat, 
+        char wrongChar, boolean wrongBool, short wrongShort
+    ) {
+        // Collection methods with mismatched primitive arguments - should trigger violations
+        intCollection.contains(wrongLong); // long cannot be in Integer collection
+        intCollection.remove(wrongDouble); // double cannot be in Integer collection
+        boolList.indexOf(wrongInt); // int cannot be in Boolean list
+        boolList.lastIndexOf(wrongChar); // char cannot be in Boolean list
+        charSet.contains(wrongBool); // boolean cannot be in Character set
+        doubleDeque.removeFirstOccurrence(wrongShort); // short cannot be in Double deque
+        doubleDeque.removeLastOccurrence(wrongLong); // long cannot be in Double deque
+        
+        // Map methods with mismatched primitive arguments - should trigger violations
+        longToFloatMap.containsKey(wrongInt); // int cannot be key in Long-keyed map
+        longToFloatMap.containsValue(wrongDouble); // double cannot be value in Float-valued map
+        longToFloatMap.get(wrongShort); // short cannot be key in Long-keyed map
+        longToFloatMap.getOrDefault(wrongChar, wrongFloat); // char cannot be key in Long-keyed map
+        longToFloatMap.remove(wrongBool); // boolean cannot be key in Long-keyed map
+        longToFloatMap.remove(wrongDouble, wrongInt); // double cannot be key in Long-keyed map
+    }
+}
+        ]]></code>
+    </test-code>
+
 </test-data>

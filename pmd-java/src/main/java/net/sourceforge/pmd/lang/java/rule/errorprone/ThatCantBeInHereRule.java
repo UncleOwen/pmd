@@ -241,10 +241,20 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
     }
 
     private boolean isCompatibleType(JTypeMirror argType, JTypeMirror expectedType) {
-        return TypeOps.isConvertible(argType, expectedType).somehow()
-            || TypeOps.isConvertible(expectedType, argType).somehow();
+        // Check basic convertibility
+        if (TypeOps.isConvertible(argType, expectedType).somehow()
+            || TypeOps.isConvertible(expectedType, argType).somehow()) {
+            return true;
+        }
+        
+        // Check primitive/wrapper compatibility (autoboxing/unboxing)
+        if (argType.isPrimitive() && expectedType.isBoxedPrimitive()) {
+            return argType.box().equals(expectedType);
+        }
+
+        return false;
     }
-    
+
     private JTypeMirror getQualifierType(ASTMethodCall node) {
         return node.getQualifier() != null ? node.getQualifier().getTypeMirror() : null;
     }
