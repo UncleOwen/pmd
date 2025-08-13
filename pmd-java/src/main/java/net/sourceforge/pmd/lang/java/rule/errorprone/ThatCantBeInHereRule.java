@@ -224,11 +224,17 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
     }
 
     private JTypeMirror resolveWildcardBound(JTypeMirror type) {
+        // Handle captured type variables from wildcards
         if (type instanceof JTypeVar && ((JTypeVar) type).isCaptured()) {
             JWildcardType wildcard = ((JTypeVar) type).getCapturedOrigin();
             if (wildcard != null) {
                 return resolveWildcard(wildcard, type.getTypeSystem());
             }
+        }
+        
+        // Handle direct wildcard types
+        if (type instanceof JWildcardType) {
+            return resolveWildcard((JWildcardType) type, type.getTypeSystem());
         }
         
         return type;

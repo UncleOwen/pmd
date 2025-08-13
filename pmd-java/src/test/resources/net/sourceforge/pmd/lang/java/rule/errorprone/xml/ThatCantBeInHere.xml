@@ -776,4 +776,22 @@ public class Test {
         ]]></code>
     </test-code>
 
+    <test-code>
+        <description>repro - Map wildcard get with String key should not trigger violation</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.*;
+
+class Repro {
+    void test() {
+        Object c = new Object();
+        if (c instanceof Map) {
+            Object path = ((Map<?, ?>) c).get("path");
+            Object value = ((Map<?, ?>) c).get("value");
+        }
+    }
+}
+        ]]></code>
+    </test-code>
+
 </test-data>
