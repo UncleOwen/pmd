@@ -713,4 +713,67 @@ public class Test {
         ]]></code>
     </test-code>
 
+    <test-code>
+        <description>Generic wildcards with unbounded ? - should not trigger violations</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testUnboundedWildcards(
+        Collection<?> unboundedCollection, List<?> unboundedList, Set<?> unboundedSet,
+        Deque<?> unboundedDeque, Map<?, String> wildcardKeyMap, Map<String, ?> wildcardValueMap,
+        Map<?, ?> fullWildcardMap, String stringParam, Integer intParam, Object objParam,
+        Collection<String> stringCollection, Collection<Integer> intCollection
+    ) {
+        // Collection methods with unbounded wildcards - should not trigger violations
+        // since ? can represent any type, including the argument type
+        unboundedCollection.contains(stringParam);
+        unboundedCollection.contains(intParam);
+        unboundedCollection.contains(objParam);
+        unboundedCollection.remove(stringParam);
+        unboundedCollection.remove(intParam);
+        
+        unboundedList.indexOf(stringParam);
+        unboundedList.indexOf(intParam);
+        unboundedList.lastIndexOf(objParam);
+        
+        unboundedSet.contains(stringParam);
+        unboundedSet.remove(intParam);
+        
+        unboundedDeque.removeFirstOccurrence(stringParam);
+        unboundedDeque.removeLastOccurrence(intParam);
+        
+        // Collection-to-collection operations with unbounded wildcards
+        unboundedCollection.removeAll(stringCollection);
+        unboundedCollection.retainAll(intCollection);
+        unboundedCollection.containsAll(stringCollection);
+        
+        // Map methods with wildcard keys - should not trigger violations  
+        wildcardKeyMap.containsKey(stringParam);
+        wildcardKeyMap.containsKey(intParam);
+        wildcardKeyMap.get(objParam);
+        wildcardKeyMap.getOrDefault(stringParam, "default");
+        wildcardKeyMap.remove(intParam);
+        wildcardKeyMap.remove(stringParam, "value");
+        
+        // Map methods with wildcard values - should not trigger violations
+        wildcardValueMap.containsValue(stringParam);
+        wildcardValueMap.containsValue(intParam);
+        wildcardValueMap.remove("key", stringParam);
+        wildcardValueMap.remove("key", intParam);
+        
+        // Map methods with full wildcards - should not trigger violations
+        fullWildcardMap.containsKey(stringParam);
+        fullWildcardMap.containsKey(intParam);
+        fullWildcardMap.containsValue(stringParam);
+        fullWildcardMap.containsValue(intParam);
+        fullWildcardMap.get(objParam);
+        fullWildcardMap.remove(stringParam);
+        fullWildcardMap.remove(intParam, objParam);
+    }
+}
+        ]]></code>
+    </test-code>
+
 </test-data>
