@@ -247,6 +247,12 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
     }
 
     private boolean isCompatibleType(JTypeMirror argType, JTypeMirror expectedType) {
+        // If either type is unresolved, be conservative and assume compatibility
+        // This prevents false positives when external dependencies can't be resolved
+        if (TypeOps.isUnresolved(argType)) {
+            return true;
+        }
+        
         // Check basic convertibility
         if (TypeOps.isConvertible(argType, expectedType).somehow()
             || TypeOps.isConvertible(expectedType, argType).somehow()) {

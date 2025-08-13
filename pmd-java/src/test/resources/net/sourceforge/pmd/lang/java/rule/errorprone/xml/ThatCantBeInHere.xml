@@ -794,4 +794,20 @@ class Repro {
         ]]></code>
     </test-code>
 
+    <test-code>
+        <description>Constructor call with unresolved external type</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import com.nonexistent.util.Pair;
+import com.nonexistent.model.Config;
+import java.util.*;
+
+class Test {
+    void test(Map<Pair<String, Config>, String> map) {
+        map.containsKey(new Pair<>("x", null));
+    }
+}
+        ]]></code>
+    </test-code>
+
 </test-data>
