@@ -248,8 +248,10 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
         }
         
         // Check primitive/wrapper compatibility (autoboxing/unboxing)
-        if (argType.isPrimitive() && expectedType.isBoxedPrimitive()) {
-            return argType.box().equals(expectedType);
+        if (argType.isPrimitive()) {
+            // Check if autoboxed primitive is compatible with expected type
+            JTypeMirror boxedArgType = argType.box();
+            return TypeOps.isConvertible(boxedArgType, expectedType).somehow();
         }
 
         return false;

@@ -665,4 +665,52 @@ public class Test {
         ]]></code>
     </test-code>
 
+    <test-code>
+        <description>Primitives with compatible supertype collections - should not trigger violations</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testPrimitivesWithCompatibleSupertypes(
+        Collection<Object> objectCollection, List<Object> objectList, Set<Number> numberSet,
+        Deque<Object> objectDeque, Map<Object, Object> objectToObjectMap, Map<Number, Object> numberToObjectMap,
+        int primitiveInt, long primitiveLong, double primitiveDouble, float primitiveFloat,
+        boolean primitiveBool, char primitiveChar, short primitiveShort, byte primitiveByte
+    ) {
+        // Collection methods with primitive arguments on Object collections - should be compatible via autoboxing
+        objectCollection.contains(primitiveInt); // int autoboxes to Integer, which extends Object
+        objectCollection.remove(primitiveLong); // long autoboxes to Long, which extends Object
+        objectList.indexOf(primitiveDouble); // double autoboxes to Double, which extends Object
+        objectList.lastIndexOf(primitiveFloat); // float autoboxes to Float, which extends Object
+        objectList.contains(primitiveBool); // boolean autoboxes to Boolean, which extends Object
+        objectDeque.removeFirstOccurrence(primitiveChar); // char autoboxes to Character, which extends Object
+        objectDeque.removeLastOccurrence(primitiveShort); // short autoboxes to Short, which extends Object
+        
+        // Collection methods with numeric primitives on Number collections - should be compatible
+        numberSet.contains(primitiveInt); // int autoboxes to Integer, which extends Number
+        numberSet.remove(primitiveLong); // long autoboxes to Long, which extends Number
+        numberSet.contains(primitiveDouble); // double autoboxes to Double, which extends Number
+        numberSet.contains(primitiveFloat); // float autoboxes to Float, which extends Number
+        numberSet.contains(primitiveShort); // short autoboxes to Short, which extends Number
+        numberSet.contains(primitiveByte); // byte autoboxes to Byte, which extends Number
+        
+        // Map methods with primitive arguments on Object maps - should be compatible via autoboxing
+        objectToObjectMap.containsKey(primitiveInt); // int autoboxes to Integer, which extends Object
+        objectToObjectMap.containsValue(primitiveLong); // long autoboxes to Long, which extends Object
+        objectToObjectMap.get(primitiveDouble); // double autoboxes to Double, which extends Object
+        objectToObjectMap.getOrDefault(primitiveFloat, new Object()); // float autoboxes to Float, which extends Object
+        objectToObjectMap.remove(primitiveBool); // boolean autoboxes to Boolean, which extends Object
+        objectToObjectMap.remove(primitiveChar, primitiveShort); // both autobox to Objects
+        
+        // Map methods with numeric primitives on Number-keyed maps - should be compatible
+        numberToObjectMap.containsKey(primitiveInt); // int autoboxes to Integer, which extends Number
+        numberToObjectMap.get(primitiveLong); // long autoboxes to Long, which extends Number
+        numberToObjectMap.remove(primitiveDouble); // double autoboxes to Double, which extends Number
+        numberToObjectMap.remove(primitiveFloat, new Object()); // float autoboxes to Float, which extends Number
+    }
+}
+        ]]></code>
+    </test-code>
+
 </test-data>
