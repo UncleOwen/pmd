@@ -630,4 +630,39 @@ public class Test {
         ]]></code>
     </test-code>
 
+    <test-code>
+        <description>Primitives with non-wrapper collection types - should trigger violations</description>
+        <expected-problems>13</expected-problems>
+        <expected-linenumbers>11,12,13,14,15,16,17,20,21,22,23,24,25</expected-linenumbers>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    void testPrimitivesWithNonWrapperTypes(
+        Collection<String> stringCollection, List<String> stringList, Set<Number> numberSet,
+        Deque<CharSequence> charSeqDeque, Map<String, String> stringToStringMap,
+        int primitiveInt, long primitiveLong, double primitiveDouble, float primitiveFloat,
+        boolean primitiveBool, char primitiveChar, short primitiveShort, byte primitiveByte
+    ) {
+        // Collection methods with primitive arguments on non-wrapper collections - should trigger violations
+        stringCollection.contains(primitiveInt); // int cannot be in String collection
+        stringCollection.remove(primitiveLong); // long cannot be in String collection
+        stringList.indexOf(primitiveDouble); // double cannot be in String list
+        stringList.lastIndexOf(primitiveFloat); // float cannot be in String list
+        numberSet.contains(primitiveBool); // boolean cannot be in Number set
+        charSeqDeque.removeFirstOccurrence(primitiveChar); // char cannot be in CharSequence deque
+        charSeqDeque.removeLastOccurrence(primitiveShort); // short cannot be in CharSequence deque
+        
+        // Map methods with primitive arguments on non-wrapper maps - should trigger violations
+        stringToStringMap.containsKey(primitiveInt); // int cannot be key in String-keyed map
+        stringToStringMap.containsValue(primitiveLong); // long cannot be value in String-valued map
+        stringToStringMap.get(primitiveDouble); // double cannot be key in String-keyed map
+        stringToStringMap.getOrDefault(primitiveFloat, "default"); // float cannot be key in String-keyed map
+        stringToStringMap.remove(primitiveBool); // boolean cannot be key in String-keyed map
+        stringToStringMap.remove("key", primitiveByte); // byte cannot be value in String-valued map
+    }
+}
+        ]]></code>
+    </test-code>
+
 </test-data>
