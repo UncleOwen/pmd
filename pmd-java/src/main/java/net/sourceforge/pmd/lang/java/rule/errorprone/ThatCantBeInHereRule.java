@@ -259,6 +259,12 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
             return true;
         }
         
+        // Special case: Class<?> should be compatible with Class<? extends T>
+        // because unbounded wildcard could represent any type, including subtypes
+        if (isClassWithUnboundedWildcardCompatible(argType, expectedType)) {
+            return true;
+        }
+        
         // Check basic convertibility
         if (TypeOps.isConvertible(argType, expectedType).somehow()
             || TypeOps.isConvertible(expectedType, argType).somehow()) {
@@ -272,6 +278,65 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
             return TypeOps.isConvertible(boxedArgType, expectedType).somehow();
         }
 
+        return false;
+    }
+    
+    private boolean isClassWithUnboundedWildcardCompatible(JTypeMirror argType, JTypeMirror expectedType) {
+        // Handle case where argument has unbounded wildcard and expected has bounded wildcard
+        // E.g., Class<?> is compatible with Class<? extends T>
+        if (!(argType instanceof JClassType) || !(expectedType instanceof JClassType)) {
+            return false;
+        }
+        
+        JClassType argClass = (JClassType) argType;
+        JClassType expectedClass = (JClassType) expectedType;
+        
+        // Must be same raw type (e.g., both Class) with same number of type args
+        if (!argClass.getSymbol().equals(expectedClass.getSymbol()) ||
+            argClass.getTypeArgs().size() != expectedClass.getTypeArgs().size()) {
+            return false;
+        }
+        
+        // Check if any argument type arg is an unbounded wildcard where expected is bounded
+        for (int i = 0; i < argClass.getTypeArgs().size(); i++) {
+            JTypeMirror argTypeArg = argClass.getTypeArgs().get(i);
+            JTypeMirror expectedTypeArg = expectedClass.getTypeArgs().get(i);
+            
+            if (isUnboundedWildcard(argTypeArg) && isBoundedWildcard(expectedTypeArg)) {
+                return true; // This specific case is compatible
+            }
+        }
+        
+        return false;
+    }
+    
+    private boolean isUnboundedWildcard(JTypeMirror type) {
+        // Direct wildcard check
+        if (type instanceof JWildcardType) {
+            return ((JWildcardType) type).isUnbounded();
+        }
+        
+        // Captured type variable from unbounded wildcard
+        if (type instanceof JTypeVar && ((JTypeVar) type).isCaptured()) {
+            JWildcardType wildcard = ((JTypeVar) type).getCapturedOrigin();
+            return wildcard != null && wildcard.isUnbounded();
+        }
+        
+        return false;
+    }
+    
+    private boolean isBoundedWildcard(JTypeMirror type) {
+        // Direct wildcard check - bounded if it's a wildcard but not unbounded
+        if (type instanceof JWildcardType) {
+            return !((JWildcardType) type).isUnbounded();
+        }
+        
+        // Captured type variable from bounded wildcard
+        if (type instanceof JTypeVar && ((JTypeVar) type).isCaptured()) {
+            JWildcardType wildcard = ((JTypeVar) type).getCapturedOrigin();
+            return wildcard != null && !wildcard.isUnbounded();
+        }
+        
         return false;
     }
     

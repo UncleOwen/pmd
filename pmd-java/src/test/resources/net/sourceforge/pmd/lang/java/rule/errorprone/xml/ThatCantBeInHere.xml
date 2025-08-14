@@ -827,5 +827,20 @@ public class Test {
         ]]></code>
     </test-code>
 
+    <test-code>
+        <description>Class wildcard type incompatibility</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.*;
+
+public class Test {
+    static class Message {}
+    
+    void test(Map<Class<? extends Message>, String> map, Class<?> clazz) {
+        map.get(clazz); // violation - Class<?> incompatible with Class<? extends Message>
+    }
+}
+        ]]></code>
+    </test-code>
 
 </test-data>
