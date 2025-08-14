@@ -253,6 +253,12 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
             return true;
         }
         
+        // If the argument type has unresolved type arguments, be more lenient
+        // This handles cases like AbstractMap.SimpleEntry<(*unknown*), (*unknown*)>
+        if (argType instanceof JClassType && hasUnresolvedTypeArguments((JClassType) argType)) {
+            return true;
+        }
+        
         // Check basic convertibility
         if (TypeOps.isConvertible(argType, expectedType).somehow()
             || TypeOps.isConvertible(expectedType, argType).somehow()) {
@@ -266,6 +272,19 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
             return TypeOps.isConvertible(boxedArgType, expectedType).somehow();
         }
 
+        return false;
+    }
+    
+    private boolean hasUnresolvedTypeArguments(JClassType classType) {
+        for (JTypeMirror typeArg : classType.getTypeArgs()) {
+            if (TypeOps.isUnresolved(typeArg)) {
+                return true;
+            }
+            // Recursively check nested type arguments
+            if (typeArg instanceof JClassType && hasUnresolvedTypeArguments((JClassType) typeArg)) {
+                return true;
+            }
+        }
         return false;
     }
 
