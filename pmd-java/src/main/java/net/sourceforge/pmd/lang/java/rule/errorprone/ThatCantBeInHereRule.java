@@ -267,7 +267,8 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
         
         // Check basic convertibility
         if (TypeOps.isConvertible(argType, expectedType).somehow()
-            || TypeOps.isConvertible(expectedType, argType).somehow()) {
+                || TypeOps.isConvertible(expectedType, argType).somehow()
+        ) {
             return true;
         }
         
@@ -292,8 +293,9 @@ public class ThatCantBeInHereRule extends AbstractJavaRulechainRule {
         JClassType expectedClass = (JClassType) expectedType;
         
         // Must be same raw type (e.g., both Class) with same number of type args
-        if (!argClass.getSymbol().equals(expectedClass.getSymbol()) ||
-            argClass.getTypeArgs().size() != expectedClass.getTypeArgs().size()) {
+        if (!argClass.getSymbol().equals(expectedClass.getSymbol())
+                || argClass.getTypeArgs().size() != expectedClass.getTypeArgs().size()
+        ) {
             return false;
         }
         
