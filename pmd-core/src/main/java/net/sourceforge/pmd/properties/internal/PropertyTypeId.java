@@ -47,6 +47,9 @@ public enum PropertyTypeId {
     INTEGER_LIST("List[Integer]", PropertyParsingUtil.INTEGER_LIST, PropertyFactory::intListProperty),
     LONG("Long", PropertyParsingUtil.LONG, PropertyFactory::longIntProperty),
     LONG_LIST("List[Long]", PropertyParsingUtil.LONG_LIST, PropertyFactory::longIntListProperty),
+    INTEGER_RANGE("Range[Integer]", PropertyParsingUtil.INTEGER_RANGE, PropertyFactory::intRangeProperty),
+    LONG_RANGE("Range[Long]", PropertyParsingUtil.LONG_RANGE, PropertyFactory::longRangeProperty),
+    DOUBLE_RANGE("Range[Double]", PropertyParsingUtil.DOUBLE_RANGE, PropertyFactory::doubleRangeProperty),
     DOUBLE("Double", PropertyParsingUtil.DOUBLE, PropertyFactory::doubleProperty),
     DOUBLE_LIST("List[Double]", PropertyParsingUtil.DOUBLE_LIST, PropertyFactory::doubleListProperty),
     ;  // SUPPRESS CHECKSTYLE enum trailing semi is awesome

@@ -4,6 +4,7 @@
 
 package net.sourceforge.pmd.properties;
 
+import net.sourceforge.pmd.properties.Range;
 import static java.util.Arrays.asList;
 import static net.sourceforge.pmd.properties.internal.PropertyParsingUtil.enumerationParser;
 
@@ -24,6 +25,7 @@ import net.sourceforge.pmd.properties.PropertyBuilder.RegexPropertyBuilder;
 import net.sourceforge.pmd.properties.internal.PropertyParsingUtil;
 import net.sourceforge.pmd.util.CollectionUtil;
 import net.sourceforge.pmd.util.StringUtil;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 //@formatter:off
 /**
@@ -135,6 +137,18 @@ public final class PropertyFactory {
         return intProperty(name).toList();
     }
 
+    /**
+     * Returns a builder for a property holding a range of integers.
+     * The format of the range in XML is "min:max", where min and max are optional.
+     *
+     * @param name Name of the property to build
+     *
+     * @return A new builder
+     */
+    public static RangePropertyBuilder<Integer> intRangeProperty(String name) {
+        return new RangePropertyBuilder<>(name, PropertyParsingUtil.INTEGER_RANGE);
+    }
+
 
     /**
      * Returns a builder for a long integer property. The property descriptor
@@ -172,6 +186,18 @@ public final class PropertyFactory {
         return longIntProperty(name).toList();
     }
 
+    /**
+     * Returns a builder for a property holding a range of long integers.
+     * The format of the range in XML is "min:max", where min and max are optional.
+     *
+     * @param name Name of the property to build
+     *
+     * @return A new builder
+     */
+    public static RangePropertyBuilder<Long> longRangeProperty(String name) {
+        return new RangePropertyBuilder<>(name, PropertyParsingUtil.LONG_RANGE);
+    }
+
 
     /**
      * Returns a builder for a double property. The property descriptor
@@ -202,6 +228,18 @@ public final class PropertyFactory {
      */
     public static GenericCollectionPropertyBuilder<Double, List<Double>> doubleListProperty(String name) {
         return doubleProperty(name).toList();
+    }
+
+    /**
+     * Returns a builder for a property holding a range of doubles.
+     * The format of the range in XML is "min:max", where min and max are optional.
+     *
+     * @param name Name of the property to build
+     *
+     * @return A new builder
+     */
+    public static RangePropertyBuilder<Double> doubleRangeProperty(String name) {
+        return new RangePropertyBuilder<>(name, PropertyParsingUtil.DOUBLE_RANGE);
     }
 
 
@@ -489,4 +527,30 @@ public final class PropertyFactory {
     }
 
 
+    /**
+     * Builder for a property that holds a {@link Range} value.
+     *
+     * @param <T> The type of the values in the range, must be Comparable.
+     */
+    public static final class RangePropertyBuilder<T extends Comparable<T>> extends PropertyBuilder.BaseSinglePropertyBuilder<RangePropertyBuilder<T>, Range<T>> {
+
+        RangePropertyBuilder(String name, PropertySerializer<Range<T>> parser) {
+            super(name, parser);
+        }
+
+        /**
+         * Specify a default value for the range property.
+         *
+         * @param minInclusive The minimum value of the range (inclusive), or null for unbounded.
+         * @param maxInclusive The maximum value of the range (inclusive), or null for unbounded.
+         *
+         * @return The same builder
+         *
+         * @throws IllegalArgumentException If min is greater than max when both are specified.
+         */
+        public RangePropertyBuilder<T> defaultValue(@Nullable T minInclusive, @Nullable T maxInclusive) {
+            super.defaultValue(new Range<>(minInclusive, maxInclusive));
+            return this;
+        }
+    }
 }

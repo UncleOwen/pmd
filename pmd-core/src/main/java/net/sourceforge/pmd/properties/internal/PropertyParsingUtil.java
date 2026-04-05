@@ -20,6 +20,7 @@ import net.sourceforge.pmd.properties.ConstraintViolatedException;
 import net.sourceforge.pmd.properties.PropertyConstraint;
 import net.sourceforge.pmd.properties.PropertyFactory;
 import net.sourceforge.pmd.properties.PropertySerializer;
+import net.sourceforge.pmd.properties.Range;
 import net.sourceforge.pmd.util.IteratorUtil;
 import net.sourceforge.pmd.util.internal.xml.XmlUtil;
 
@@ -59,6 +60,10 @@ public final class PropertyParsingUtil {
     public static final PropertySerializer<List<Double>> DOUBLE_LIST = numberList(DOUBLE);
     public static final PropertySerializer<List<Long>> LONG_LIST = numberList(LONG);
 
+    public static final PropertySerializer<Range<Integer>> INTEGER_RANGE = rangeParser(INTEGER);
+    public static final PropertySerializer<Range<Long>> LONG_RANGE = rangeParser(LONG);
+    public static final PropertySerializer<Range<Double>> DOUBLE_RANGE = rangeParser(DOUBLE);
+
     public static final PropertySerializer<List<Character>> CHAR_LIST = otherList(CHARACTER);
     public static final PropertySerializer<List<String>> STRING_LIST = otherList(STRING);
 
@@ -73,6 +78,28 @@ public final class PropertyParsingUtil {
 
     private static <T> PropertySerializer<List<T>> otherList(ValueSyntax<T> valueSyntax) {
         return delimitedString(valueSyntax, Collectors.toList() /* prefer old syntax for now */);
+    }
+
+    private static <T extends Comparable<T>> PropertySerializer<Range<T>> rangeParser(ValueSyntax<T> itemSyntax) {
+        return ValueSyntax.create(
+            range -> {
+                String min = range.getMin() != null ? itemSyntax.toString(range.getMin()) : "";
+                String max = range.getMax() != null ? itemSyntax.toString(range.getMax()) : "";
+                return min + ":" + max;
+            },
+            string -> {
+                String[] parts = string.split(":", -1);
+                if (parts.length != 2) {
+                    throw new IllegalArgumentException("Range string must be in 'min:max' format");
+                }
+                T min = parts[0].isEmpty() ? null : itemSyntax.fromString(parts[0]);
+                T max = parts[1].isEmpty() ? null : itemSyntax.fromString(parts[1]);
+                return new Range<>(min, max);
+            },
+            s -> false,
+            false,
+            Collections.emptySet()
+        );
     }
 
     private static <T> Function<String, ? extends T> preTrim(Function<? super String, ? extends T> parser) {
