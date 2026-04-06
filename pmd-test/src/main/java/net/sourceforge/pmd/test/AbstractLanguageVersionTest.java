@@ -15,7 +15,6 @@ import java.util.Properties;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import net.sourceforge.pmd.ant.SourceLanguage;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.LanguageVersion;
@@ -117,14 +116,10 @@ public abstract class AbstractLanguageVersionTest {
     @ParameterizedTest
     @MethodSource("data")
     void testFindVersionsForLanguageNameAndVersion(TestDescriptor testDescriptor) {
-        SourceLanguage sourceLanguage = new SourceLanguage();
-        sourceLanguage.setName(testDescriptor.getName());
-        sourceLanguage.setVersion(testDescriptor.getVersion());
-
-        Language language = getLanguage(sourceLanguage.getName());
+        Language language = getLanguage(testDescriptor.getName());
         LanguageVersion languageVersion = null;
         if (language != null) {
-            languageVersion = language.getVersion(sourceLanguage.getVersion());
+            languageVersion = language.getVersion(testDescriptor.getVersion());
         }
 
         assertEquals(testDescriptor.getExpected(), languageVersion);
