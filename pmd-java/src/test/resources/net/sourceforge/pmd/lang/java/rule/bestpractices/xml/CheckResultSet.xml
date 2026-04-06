@@ -435,4 +435,76 @@ public class Foo {
             }
         ]]></code>
     </test-code>
+
+    <test-code>
+        <description>#5031 - FP do-while-loop</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.sql.*;
+
+class Foo {
+    public <T> List<String> toBeanList(final ResultSet resultSet) throws SQLException {
+        final List<String> results = new ArrayList<>();
+        if (!resultSet.next()) {
+            return results;
+        }
+        do {
+            results.add(resultSet.getString(0));
+        } while (resultSet.next());
+        return results;
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>FP for-loop</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.sql.*;
+
+class Foo {
+    public void bar(ResultSet rs) throws SQLException {
+        for (; rs.next(); ) {
+            System.out.println(rs.getString(1));
+        }
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>FP switch</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.sql.*;
+
+class Foo {
+    public void bar(ResultSet rs) throws SQLException {
+        switch (rs.next() ? 1 : 0) {
+            case 1: break;
+            case 0: break;
+        }
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Assignment usage</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.sql.*;
+
+class Foo {
+    public void bar(ResultSet rs) throws SQLException {
+        boolean b;
+        b = rs.next();
+        if (b) {
+            System.out.println("next");
+        }
+    }
+}
+        ]]></code>
+    </test-code>
 </test-data>
