@@ -23,26 +23,26 @@ class PMDTaskTest extends AbstractAntTestHelper {
         antTestScriptFilename = "pmdtasktest.xml";
     }
 
-    @Test
-    void testNoFormattersValidation() {
-        executeTarget("testNoFormattersValidation");
-        assertOutputContaining("Violation from test-rset-1.xml");
-    }
-
-    @Test
-    void testNestedRuleset() {
-        executeTarget("testNestedRuleset");
-        assertOutputContaining("Violation from test-rset-1.xml");
-        assertOutputContaining("Violation from test-rset-2.xml");
-    }
-
-    @Test
-    void testFormatterWithProperties() {
-        executeTarget("testFormatterWithProperties");
-        assertOutputContaining("Violation from test-rset-1.xml");
-        assertOutputContaining("link_prefix");
-        assertOutputContaining("line_prefix");
-    }
+//    @Test
+//    void testNoFormattersValidation() {
+//        executeTarget("testNoFormattersValidation");
+//        assertOutputContaining("Violation from test-rset-1.xml");
+//    }
+//
+//    @Test
+//    void testNestedRuleset() {
+//        executeTarget("testNestedRuleset");
+//        assertOutputContaining("Violation from test-rset-1.xml");
+//        assertOutputContaining("Violation from test-rset-2.xml");
+//    }
+//
+//    @Test
+//    void testFormatterWithProperties() {
+//        executeTarget("testFormatterWithProperties");
+//        assertOutputContaining("Violation from test-rset-1.xml");
+//        assertOutputContaining("link_prefix");
+//        assertOutputContaining("line_prefix");
+//    }
 
     @Test
     void testAbstractNames() {

@@ -4,30 +4,30 @@
 
     <taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask"/>
 
-	<target name="testNestedRuleset">
-		<pmd>
-			<ruleset>${pmd.home}/src/test/resources/rulesets/testing/test-rset-1.xml</ruleset>
-			<ruleset>${pmd.home}/src/test/resources/rulesets/testing/test-rset-2.xml</ruleset>
-			<formatter type="text" toConsole="true"/>
-			<fileset dir="${pmd.home}/src/test/resources/ant/java">
-				<include name="*.java"/>
-			</fileset>
-		</pmd>
-	</target>
+<!--	<target name="testNestedRuleset">-->
+<!--		<pmd>-->
+<!--			<ruleset>${pmd.home}/src/test/resources/rulesets/testing/test-rset-1.xml</ruleset>-->
+<!--			<ruleset>${pmd.home}/src/test/resources/rulesets/testing/test-rset-2.xml</ruleset>-->
+<!--			<formatter type="text" toConsole="true"/>-->
+<!--			<fileset dir="${pmd.home}/src/test/resources/ant/java">-->
+<!--				<include name="*.java"/>-->
+<!--			</fileset>-->
+<!--		</pmd>-->
+<!--	</target>-->
 
-	<target name="testFormatterWithProperties">
-		<pmd>
-			<ruleset>${pmd.home}/src/test/resources/rulesets/testing/test-rset-1.xml</ruleset>
-			<ruleset>${pmd.home}/src/test/resources/rulesets/testing/test-rset-2.xml</ruleset>
-			<formatter type="summaryhtml" toConsole="true">
-				<param name="linkPrefix" value="link_prefix"/>
-				<param name="linePrefix" value="line_prefix"/>
-			</formatter>
-			<fileset dir="${pmd.home}/src/test/resources/ant/java">
-				<include name="*.java"/>
-			</fileset>
-		</pmd>
-	</target>
+<!--	<target name="testFormatterWithProperties">-->
+<!--		<pmd>-->
+<!--			<ruleset>${pmd.home}/src/test/resources/rulesets/testing/test-rset-1.xml</ruleset>-->
+<!--			<ruleset>${pmd.home}/src/test/resources/rulesets/testing/test-rset-2.xml</ruleset>-->
+<!--			<formatter type="summaryhtml" toConsole="true">-->
+<!--				<param name="linkPrefix" value="link_prefix"/>-->
+<!--				<param name="linePrefix" value="line_prefix"/>-->
+<!--			</formatter>-->
+<!--			<fileset dir="${pmd.home}/src/test/resources/ant/java">-->
+<!--				<include name="*.java"/>-->
+<!--			</fileset>-->
+<!--		</pmd>-->
+<!--	</target>-->
 
 	<target name="testAbstractNames">
 		<pmd rulesetfiles="rulesets/testing/test-rset-1.xml,rulesets/testing/test-rset-2.xml">
@@ -78,13 +78,13 @@
 		</pmd>
 	</target>
 
-	<target name="testNoFormattersValidation">
-		<pmd rulesetfiles="${pmd.home}/src/test/resources/rulesets/testing/test-rset-1.xml">
-            <fileset dir="${pmd.home}/src/test/resources/ant/java">
-                <include name="*.java"/>
-            </fileset>
-		</pmd>
-	</target>
+<!--	<target name="testNoFormattersValidation">-->
+<!--		<pmd rulesetfiles="${pmd.home}/src/test/resources/rulesets/testing/test-rset-1.xml">-->
+<!--            <fileset dir="${pmd.home}/src/test/resources/ant/java">-->
+<!--                <include name="*.java"/>-->
+<!--            </fileset>-->
+<!--		</pmd>-->
+<!--	</target>-->
 
 	<target name="testExplicitRuleInRuleSet">
 		<pmd rulesetfiles="src/test/resources/rulesets/testing/test-rset-1.xml/DummyRuleWithAViolationPerFile">

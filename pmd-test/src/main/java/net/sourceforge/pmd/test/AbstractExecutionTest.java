@@ -13,6 +13,7 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
 
 import net.sourceforge.pmd.PMDConfiguration;
 import net.sourceforge.pmd.PmdAnalysis;
@@ -26,6 +27,8 @@ public class AbstractExecutionTest {
     protected List<Path> files;
     protected List<String> rulesetFiles;
     protected LanguageVersion languageVersion;
+    protected String reportFormat;
+    protected Properties reportProperties = new Properties();
 
     private String output;
 
@@ -47,7 +50,12 @@ public class AbstractExecutionTest {
     private void doExecute() {
         PMDConfiguration configuration = new PMDConfiguration();
 
-        configuration.setReportFormat("text");
+        if (reportFormat == null) {
+            configuration.setReportFormat("text");
+        } else {
+            configuration.setReportFormat(reportFormat);
+            configuration.setReportProperties(reportProperties);
+        }
 
         if (languageVersion != null) {
             configuration.setDefaultLanguageVersion(languageVersion);
