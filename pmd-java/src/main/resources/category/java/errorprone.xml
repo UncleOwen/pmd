@@ -892,6 +892,29 @@ public class DummyActivity extends Activity {
         </example>
     </rule>
 
+    <rule name="CheckReturnValue"
+          language="java"
+          since="7.25.0"
+          message="Result of ''{0}'' is ignored."
+          class="net.sourceforge.pmd.lang.java.rule.errorprone.CheckReturnValueRule"
+          externalInfoUrl="${pmd.website.baseurl}/pmd_rules_java_errorprone.html#checkreturnvalue">
+        <description>
+            Reports method calls whose result is ignored.
+
+            For many methods, ignoring the result is perfectly legitimate, but for some it is almost certainly an error.
+            Reasons why a ignoring the result may be an error include, but aren't limited to:
+            - The method is pure. It does nothing but produce a result. If you ignore result, you might as well not call the method.
+            - For `InputStream`s, the result of calling `read()` or `skip()` returns the number of bytes read/skipped, which might be smaller than requested.
+            Check a method's Javadoc, if you're unsure which of the above (if any) apply.
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+FIXME
+]]>
+        </example>
+    </rule>
+
     <rule name="CheckSkipResult"
           language="java"
           since="5.0"
