@@ -627,4 +627,73 @@ public class Foo extends FileInputStream {
 }
         ]]></code>
     </test-code>
+
+    <test-code>
+        <description>If a method is annotated with @anypackage.CheckReturnValue, the return value should be checked</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import net.sourceforge.pmd.lang.java.rule.errorprone.checkreturnvalue.HasAnnotatedMethod;
+
+public class Foo {
+    public void bar(HasAnnotatedMethod x) {
+        x.annotatedMethod();  // bad
+
+        System.out.println(x.annotatedMethod());  // good
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>If a method is in a class annotated with @anypackage.CheckReturnValue, the return value should be checked</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import net.sourceforge.pmd.lang.java.rule.errorprone.checkreturnvalue.AnnotatedClass;
+
+public class Foo {
+    public void bar(AnnotatedClass x) {
+        x.shouldBeChecked();  // bad
+
+        System.out.println(x.shouldBeChecked());  // good
+
+        x.doesNotNeedToBeChecked();  // good, because the method is annotated with @CanIgnoreReturnValue
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>If a method is in a class in a package annotated with @anypackage.CheckReturnValue, the return value should be checked</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <code><![CDATA[
+import net.sourceforge.pmd.lang.java.rule.errorprone.checkreturnvalue.annotatedpackage.ClassInAnnotatedPackage;
+
+public class Foo {
+    public void bar(ClassInAnnotatedPackage x) {
+        x.shouldBeChecked();  // bad
+
+        System.out.println(x.shouldBeChecked());  // good
+
+        x.doesNotNeedToBeChecked();  // good, because the method is annotated with @CanIgnoreReturnValue
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>With different annotations, nothing needs to be checked</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import net.sourceforge.pmd.lang.java.rule.errorprone.checkreturnvalue.ClassWithUnrelatedAnnotation;
+
+public class Foo {
+    public void bar(ClassWithUnrelatedAnnotation x) {
+        x.doesNotNeedToBeChecked();  // good
+    }
+}
+        ]]></code>
+    </test-code>
 </test-data>
