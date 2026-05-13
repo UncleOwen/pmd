@@ -9,10 +9,8 @@ import net.sourceforge.pmd.lang.java.ast.ASTMethodCall;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
 import net.sourceforge.pmd.lang.java.rule.internal.JavaRuleUtil;
 import net.sourceforge.pmd.lang.java.symbols.AnnotableSymbol;
-import net.sourceforge.pmd.lang.java.symbols.JClassSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JExecutableSymbol;
 import net.sourceforge.pmd.lang.java.symbols.JTypeDeclSymbol;
-import net.sourceforge.pmd.lang.java.symbols.SymbolResolver;
 import net.sourceforge.pmd.lang.java.types.InvocationMatcher;
 import net.sourceforge.pmd.lang.java.types.InvocationMatcher.CompoundInvocationMatcher;
 import net.sourceforge.pmd.lang.java.types.JMethodSig;
@@ -64,6 +62,9 @@ public class CheckReturnValueRule extends AbstractJavaRulechainRule {
 
     private boolean isCheckReturnValueAnnotated(ASTMethodCall call) {
         JExecutableSymbol methodSymbol = call.getMethodType().getSymbol();
+        if (methodSymbol.isUnresolved()) {
+            return false;
+        }
         if (isAnnotatedWith(methodSymbol, CHECK_RETURN_VALUE_ANNOTATION)) {
             return true;
         }
@@ -76,8 +77,7 @@ public class CheckReturnValueRule extends AbstractJavaRulechainRule {
         }
 
         TypeSystem typeSystem = classSymbol.getTypeSystem();
-        SymbolResolver resolver = typeSystem.bootstrapResolver();
-        JClassSymbol packageSymbol = resolver.resolveClassFromCanonicalName(classSymbol.getPackageName() + ".package-info");
+        AnnotableSymbol packageSymbol = typeSystem.getPackageSymbol(classSymbol.getPackageName());
         return packageSymbol != null
                 && isAnnotatedWith(packageSymbol, CHECK_RETURN_VALUE_ANNOTATION)
                 && !isAnnotatedWith(methodSymbol, CAN_IGNORE_RETURN_VALUE_ANNOTATION);

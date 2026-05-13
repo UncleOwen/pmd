@@ -35,6 +35,11 @@ public interface SymbolResolver {
     @Nullable JModuleSymbol resolveModule(@NonNull String moduleName);
 
     /**
+     * @since 7.25.0
+     */
+    @Nullable AnnotableSymbol resolvePackage(@NonNull String packageName);
+
+    /**
      * Resolves a class symbol from its canonical name. Periods ('.') may
      * be interpreted as nested-class separators, so for n segments, this
      * performs at most n classloader lookups.
@@ -90,6 +95,17 @@ public interface SymbolResolver {
                     JModuleSymbol symbol = resolver.resolveModule(moduleName);
                     if (symbol != null) {
                         return symbol;
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public @Nullable AnnotableSymbol resolvePackage(@NonNull String packageName) {
+                for (SymbolResolver resolver : stack) {
+                    AnnotableSymbol sym = resolver.resolvePackage(packageName);
+                    if (sym != null) {
+                        return sym;
                     }
                 }
                 return null;
