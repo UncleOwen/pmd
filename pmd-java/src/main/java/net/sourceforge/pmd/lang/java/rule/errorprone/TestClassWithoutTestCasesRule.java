@@ -10,12 +10,12 @@ import static net.sourceforge.pmd.lang.java.rule.internal.TestFrameworksUtil.isJ
 import java.util.regex.Pattern;
 
 import net.sourceforge.pmd.lang.java.ast.ASTClassDeclaration;
-import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTTypeDeclaration;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRulechainRule;
 import net.sourceforge.pmd.lang.java.rule.internal.TestFrameworksUtil;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
+import net.sourceforge.pmd.reporting.RuleContext;
 
 public class TestClassWithoutTestCasesRule extends AbstractJavaRulechainRule {
 
@@ -32,17 +32,18 @@ public class TestClassWithoutTestCasesRule extends AbstractJavaRulechainRule {
 
     @Override
     public Object visit(ASTClassDeclaration node, Object data) {
+        RuleContext ctx = (RuleContext) data;
+
         if (isJUnit3Class(node) || isJUnit5NestedClass(node) || isTestClassByPattern(node)) {
-            boolean hasTests =
-                node.getDeclarations(ASTMethodDeclaration.class)
-                    .any(TestFrameworksUtil::isTestMethod);
+            boolean hasTests = TestFrameworksUtil.hasTests(node);
             boolean hasNestedTestClasses = node.getDeclarations(ASTTypeDeclaration.class)
                     .any(TestFrameworksUtil::isJUnit5NestedClass);
 
             if (!hasTests && !hasNestedTestClasses) {
-                asCtx(data).addViolation(node, node.getSimpleName());
+                ctx.addViolation(node, node.getSimpleName());
             }
         }
+
         return null;
     }
 

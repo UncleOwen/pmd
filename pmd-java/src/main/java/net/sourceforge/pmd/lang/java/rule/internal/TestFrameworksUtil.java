@@ -164,6 +164,10 @@ public final class TestFrameworksUtil {
             && TypeTestUtil.isA(JUNIT3_CLASS_NAME, node);
     }
 
+    private static boolean hasJUnit3Tests(ASTTypeDeclaration node) {
+        return node.getDeclarations(ASTMethodDeclaration.class).any(TestFrameworksUtil::isJunit3MethodSignature);
+    }
+
     public static boolean isTestClass(ASTClassDeclaration node) {
         return isJUnit3Class(node) || isJUnit4Class(node) || isJUnit5Class(node) || isTestNGClass(node);
     }
@@ -171,25 +175,42 @@ public final class TestFrameworksUtil {
     public static boolean isJUnit4Class(ASTClassDeclaration node) {
         JClassType typeMirror = node.getTypeMirror();
 
-        return !typeMirror.isInterface() && !typeMirror.getSymbol().isAbstract() && typeMirror.getEnclosingType() == null
-                && typeMirror.streamMethods(TestFrameworksUtil::isJUnit4Method)
-                        .findAny().isPresent();
+        return isConcreteToplevelClass(typeMirror) && hasJUnit4Tests(typeMirror);
+    }
+
+    private static boolean hasJUnit4Tests(JClassType typeMirror) {
+        return typeMirror.streamMethods(TestFrameworksUtil::isJUnit4Method)
+                .findAny().isPresent();
     }
 
     public static boolean isJUnit5Class(ASTClassDeclaration node) {
         JClassType typeMirror = node.getTypeMirror();
 
-        return !typeMirror.isInterface() && !typeMirror.getSymbol().isAbstract() && typeMirror.getEnclosingType() == null
-                && typeMirror.streamMethods(TestFrameworksUtil::isJUnit5Method)
-                        .findAny().isPresent();
+        return isConcreteToplevelClass(typeMirror) && hasJUnit5Tests(typeMirror);
+    }
+
+    private static boolean hasJUnit5Tests(JClassType typeMirror) {
+        return typeMirror.streamMethods(TestFrameworksUtil::isJUnit5Method)
+                .findAny().isPresent();
     }
 
     public static boolean isTestNGClass(ASTClassDeclaration node) {
         JClassType typeMirror = node.getTypeMirror();
 
-        return !typeMirror.isInterface() && !typeMirror.getSymbol().isAbstract() && typeMirror.getEnclosingType() == null
-                && typeMirror.streamMethods(TestFrameworksUtil::isTestNgMethod)
-                        .findAny().isPresent();
+        return isConcreteToplevelClass(typeMirror) && hasTestNGTests(typeMirror);
+    }
+
+    private static boolean hasTestNGTests(JClassType typeMirror) {
+        return typeMirror.streamMethods(TestFrameworksUtil::isTestNgMethod)
+                .findAny().isPresent();
+    }
+
+    public static boolean hasTests(ASTClassDeclaration node) {
+        return hasJUnit3Tests(node) || hasJUnit4Tests(node.getTypeMirror()) || hasJUnit5Tests(node.getTypeMirror()) || hasTestNGTests(node.getTypeMirror());
+    }
+
+    private static boolean isConcreteToplevelClass(JClassType typeMirror) {
+        return !typeMirror.isInterface() && !typeMirror.getSymbol().isAbstract() && typeMirror.getEnclosingType() == null;
     }
 
     public static boolean isJUnit5NestedClass(ASTTypeDeclaration innerClassDecl) {
