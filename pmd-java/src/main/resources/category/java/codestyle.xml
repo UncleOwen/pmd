@@ -788,6 +788,22 @@ try {
         </example>
     </rule>
 
+    <rule name="InnerClassMayBeStatic"
+          language="java"
+          since="7.26.0"
+          message="FIXME"
+          class="net.sourceforge.pmd.lang.java.rule.codestyle.InnerClassMayBeStaticRule"
+          externalInfoUrl="${pmd.website.baseurl}/pmd_rules_java_codestyle.html#innerclassmaybestatic">
+        <description>
+            FIXME
+        </description>
+        <priority>3</priority>
+        <example>
+            <![CDATA[
+// FIXME
+            ]]>
+        </example>
+    </rule>
 
     <rule name="LambdaCanBeMethodReference"
           language="java"

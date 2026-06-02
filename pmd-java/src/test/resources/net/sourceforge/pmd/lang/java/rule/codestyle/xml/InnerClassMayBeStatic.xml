@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test-data
+    xmlns="http://pmd.sourceforge.net/rule-tests"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests http://pmd.sourceforge.net/rule-tests_1_0_0.xsd">
+
+    <test-code>
+        <description>inner class doesn't reference outer class</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>2-2</expected-linenumbers>
+        <code><![CDATA[
+public class Outer {
+    public class Inner {
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>nested class is already static</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+public class Outer {
+    public static class Inner {
+        {
+            Outer.this;
+        }
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>inner class references Outer.this</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+public class Outer {
+    public class Inner {
+        {
+            Outer.this;
+        }
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>inner class references function in outer class</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+public class Outer {
+    public class Inner {
+        private void bar() {
+            foo();
+        }
+    }
+
+    private void foo() {};
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>inner class references function in inner class</description>
+        <expected-problems>1</expected-problems>
+        <code><![CDATA[
+public class Outer {
+    public class Inner {
+        private void bar() {
+            foo();
+        }
+
+        private void foo() {};
+    }
+}
+        ]]></code>
+    </test-code>
+</test-data>
