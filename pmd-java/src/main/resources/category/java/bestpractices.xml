@@ -1425,6 +1425,21 @@ public class Foo {
         </example>
     </rule>
 
+    <rule name="SimplifiableStreamExpression"
+          language="java"
+          since="7.26.0"
+          message="Stream call chain may be simplified: replace `{0}` with `{1}`"
+          class="net.sourceforge.pmd.lang.java.rule.bestpractices.SimplifiableStreamExpressionRule"
+          externalInfoUrl="${pmd.website.baseurl}/pmd_rules_java_bestpractices.html#simplifiablestreamexpression">
+        <description>
+            FIXME
+        </description>
+        <priority>3</priority>
+        <example><![CDATA[
+FIXME
+        ]]></example>
+    </rule>
+
     <rule name="SimplifiableTestAssertion"
           language="java"
           since="6.37.0"

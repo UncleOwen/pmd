@@ -1,0 +1,726 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test-data
+        xmlns="http://pmd.sourceforge.net/rule-tests"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests http://pmd.sourceforge.net/rule-tests_1_0_0.xsd">
+
+    <test-code>
+        <description>collection.stream().forEach() → collection.forEach()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.stream().forEach(..)` with `.forEach(..)`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.List;
+
+class Foo {
+    void bar(List<String> strings) {
+        strings.stream().forEach(s -> {});
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>stream.forEach() (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.stream.Stream;
+
+class Foo {
+    void bar(Stream<String> stream) {
+        stream.forEach(s -> {});
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>collection.stream().toArray() → collection.toArray()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.stream().toArray(..)` with `.toArray(..)`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.List;
+
+class Foo {
+    void bar(List<String> strings) {
+        strings.stream().toArray(String[]::new);
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>stream.toArray() (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.stream.Stream;
+
+class Foo {
+    void bar(Stream<String> stream) {
+        stream.toArray(String[]::new);
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Collections.singleton().stream() → Stream.of()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `Collections.singleton(..).stream()` with `Stream.of(..)`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.Collections;
+
+class Foo {
+    void bar() {
+        Collections.singleton(42).stream();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Collections.emptyList().stream() → Stream.empty()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `Collections.emptyList().stream()` with `Stream.empty()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.Collections;
+
+class Foo {
+    void bar() {
+        Collections.emptyList().stream();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>collection.stream() (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.Collection;
+
+class Foo {
+    void bar(Collection<String> c) {
+        c.stream();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>stream.filter().findFirst().isPresent() → stream.anyMatch()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.filter(..).findFirst().isPresent()` with `.anyMatch(..)`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.Stream;
+
+class Foo {
+    void bar(Stream<String> stream) {
+        stream.filter(x -> true).findFirst().isPresent();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>optional.isPresent() (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.Optional;
+
+class Foo {
+    void bar(Optional<String> opt) {
+        opt.isPresent();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>stream.findFirst().isPresent() (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.stream.Stream;
+
+class Foo {
+    void bar(Stream<String> stream) {
+        stream.findFirst().isPresent();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>intstream.filter().findFirst().isPresent() → intstream.anyMatch()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.filter(..).findFirst().isPresent()` with `.anyMatch(..)`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.IntStream;
+
+class Foo {
+    void bar(IntStream stream) {
+        stream.filter(x -> true).findFirst().isPresent();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>longstream.filter().findFirst().isPresent() → longstream.anyMatch()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.filter(..).findFirst().isPresent()` with `.anyMatch(..)`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.LongStream;
+
+class Foo {
+    void bar(LongStream stream) {
+        stream.filter(x -> true).findFirst().isPresent();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>doublestream.filter().findFirst().isPresent() → doublestream.anyMatch()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.filter(..).findFirst().isPresent()` with `.anyMatch(..)`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.DoubleStream;
+
+class Foo {
+    void bar(DoubleStream stream) {
+        stream.filter(x -> true).findFirst().isPresent();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>optionalint.isPresent() (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.OptionalInt;
+
+class Foo {
+    void bar(OptionalInt opt) {
+        opt.isPresent();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>intstream.findFirst().isPresent() (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.stream.IntStream;
+
+class Foo {
+    void bar(IntStream stream) {
+        stream.findFirst().isPresent();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>stream.collect(counting()) → stream.count()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>6</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.collect(counting())` with `.count()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.Stream;
+import static java.util.stream.Collectors.counting;
+
+class Foo {
+    void bar(Stream<String> stream) {
+        stream.collect(counting());
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>stream.collect(maxBy()) → stream.max()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>7</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.collect(maxBy(..))` with `.max(..)`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.Stream;
+import static java.util.stream.Collectors.maxBy;
+import static java.util.Comparator.naturalOrder;
+
+class Foo {
+    void bar(Stream<String> stream) {
+        stream.collect(maxBy(naturalOrder()));
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>stream.collect(mapping()) → stream.map().collect()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>7</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.collect(mapping(..))` with `.map(..).collect(..)`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.Stream;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
+
+class Foo {
+    void bar(Stream<String> stream) {
+        stream.collect(mapping(x -> x, toList()));
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>stream.collect(reducing()) → stream.reduce()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>6</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.collect(reducing(..))` with `.reduce(..)`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.Stream;
+import static java.util.stream.Collectors.reducing;
+
+class Foo {
+    void bar(Stream<String> stream) {
+        stream.collect(reducing((a,b) -> a+b));
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>stream.collect(summingInt()) → stream.mapToInt().sum()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>6</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.collect(summingInt(..))` with `.mapToInt(..).sum()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.Stream;
+import static java.util.stream.Collectors.summingInt;
+
+class Foo {
+    void bar(Stream<String> stream) {
+        stream.collect(summingInt(Integer::parseInt));
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>stream.collect(joining()) (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.stream.Stream;
+import static java.util.stream.Collectors.joining;
+
+class Foo {
+    void bar(Stream<String> stream) {
+        stream.collect(counting());
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>intstream.mapToObj(x -> x) → intstream.boxed()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.mapToObj(x -> x)` with `.boxed()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.IntStream;
+
+class Foo {
+    void bar(IntStream stream) {
+        stream.mapToObj(x -> x);
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>longstream.mapToObj(x -> x) → longstream.boxed()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.mapToObj(x -> x)` with `.boxed()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.LongStream;
+
+class Foo {
+    void bar(LongStream stream) {
+        stream.mapToObj(x -> x);
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>doublestream.mapToObj(x -> x) → doublestream.boxed()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.mapToObj(x -> x)` with `.boxed()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.DoubleStream;
+
+class Foo {
+    void bar(DoubleStream stream) {
+        stream.mapToObj(x -> x);
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>intstream.mapToObj(x -> { return x; } ) → intstream.boxed()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.mapToObj(x -> x)` with `.boxed()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.IntStream;
+
+class Foo {
+    void bar(IntStream stream) {
+        stream.mapToObj(x -> { return x; } );
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>intstream.mapToObj(anything else) (no violation))</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.stream.IntStream;
+import java.util.function.IntFunction;
+
+class Foo {
+    void bar(IntStream stream) {
+        stream.mapToObj(x -> 42);
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>stream.sorted(comparator).findFirst() → stream.min(comparator)</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>6</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.sorted(..).findFirst()` with `.min(..)`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.Stream;
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
+
+class Foo {
+    void bar(Stream<String> stream) {
+        stream.sorted(CASE_INSENSITIVE_ORDER).findFirst();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>stream.sorted().findFirst() → stream.min()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.sorted().findFirst()` with `.min()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.Stream;
+
+class Foo {
+    void bar(Stream<String> stream) {
+        stream.sorted().findFirst();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>stream.findFirst() (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.stream.Stream;
+
+class Foo {
+    void bar(Stream<String> stream) {
+        stream.firdFirst();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>intstream.sorted(comparator).findFirst() → intstream.min(comparator)</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.sorted().findFirst()` with `.min()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.IntStream;
+
+class Foo {
+    void bar(IntStream stream) {
+        stream.sorted().findFirst();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>longstream.sorted(comparator).findFirst() → longstream.min(comparator)</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.sorted().findFirst()` with `.min()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.LongStream;
+
+class Foo {
+    void bar(LongStream stream) {
+        stream.sorted().findFirst();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>doublestream.sorted(comparator).findFirst() → doublestream.min(comparator)</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.sorted().findFirst()` with `.min()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.stream.DoubleStream;
+
+class Foo {
+    void bar(DoubleStream stream) {
+        stream.sorted().findFirst();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>intstream.findFirst() (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.stream.IntStream;
+
+class Foo {
+    void bar(IntStream stream) {
+        stream.firdFirst();
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>optional.orElseGet(() -> { throw new ...; }) → optional.orElseThrow()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.orElseGet(() -> { throw new ...; })` with `.orElseThrow()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.Optional;
+
+class Foo {
+    void bar(Optional<String> opt) {
+        opt.orElseGet(() -> { throw new RuntimeException(); });
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>optional.orElseGet(ref) (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.Optional;
+
+class Foo {
+    void bar(Optional<String> opt) {
+        opt.orElseGet(String::new);
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>optional.orElseGet(() -> expr) (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.Optional;
+
+class Foo {
+    void bar(Optional<String> opt) {
+        opt.orElseGet(() -> "42");
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>optional.orElseGet(() -> { something else }) (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.Optional;
+
+class Foo {
+    void bar(Optional<String> opt) {
+        opt.orElseGet(() -> { return "42"; });
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>optionalint.orElseGet(() -> { throw new ...; }) → optionalint.orElseThrow()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.orElseGet(() -> { throw new ...; })` with `.orElseThrow()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.OptionalInt;
+
+class Foo {
+    void bar(OptionalInt opt) {
+        opt.orElseGet(() -> { throw new RuntimeException(); });
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>optionallong.orElseGet(() -> { throw new ...; }) → optionallong.orElseThrow()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.orElseGet(() -> { throw new ...; })` with `.orElseThrow()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.OptionalLong;
+
+class Foo {
+    void bar(OptionalLong opt) {
+        opt.orElseGet(() -> { throw new RuntimeException(); });
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>optionaldouble.orElseGet(() -> { throw new ...; }) → optionaldouble.orElseThrow()</description>
+        <expected-problems>1</expected-problems>
+        <expected-linenumbers>5</expected-linenumbers>
+        <expected-messages>
+            <message>Stream call chain may be simplified: replace `.orElseGet(() -> { throw new ...; })` with `.orElseThrow()`</message>
+        </expected-messages>
+        <code><![CDATA[
+import java.util.OptionalDouble;
+
+class Foo {
+    void bar(OptionalDouble opt) {
+        opt.orElseGet(() -> { throw new RuntimeException(); });
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>optionalint.orElseGet(ref) (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.OptionalInt;
+
+class Foo {
+    void bar(OptionalInt opt) {
+        opt.orElseGet(Foo::createInt);
+    }
+
+    static int createInt() {
+        return 42;
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>optionalint.orElseGet(() -> expr) (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.OptionalInt;
+
+class Foo {
+    void bar(OptionalInt opt) {
+        opt.orElseGet(() -> 42);
+    }
+}
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>optionalint.orElseGet(() -> { something else }) (no violation)</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+import java.util.OptionalInt;
+
+class Foo {
+    void bar(OptionalInt opt) {
+        opt.orElseGet(() -> { return 42; });
+    }
+}
+        ]]></code>
+    </test-code>
+</test-data>
