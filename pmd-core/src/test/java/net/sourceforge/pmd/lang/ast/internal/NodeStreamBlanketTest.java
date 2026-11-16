@@ -25,10 +25,10 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import net.sourceforge.pmd.lang.ast.DummyNode;
-import net.sourceforge.pmd.lang.ast.DummyNode.DummyNodeTypeB;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.NodeStream;
+import net.sourceforge.pmd.lang.dummy.DummyNode;
+import net.sourceforge.pmd.lang.dummy.DummyNode.DummyNodeTypeB;
 
 /**
  * Asserts invariants independent of the NodeStream implementation. Error

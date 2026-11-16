@@ -29,7 +29,7 @@ import org.slf4j.event.Level;
 
 import net.sourceforge.pmd.PMDConfiguration;
 import net.sourceforge.pmd.PmdAnalysis;
-import net.sourceforge.pmd.lang.DummyLanguageModule;
+import net.sourceforge.pmd.lang.dummy.DummyLanguageModule;
 import net.sourceforge.pmd.util.internal.xml.SchemaConstant;
 import net.sourceforge.pmd.util.internal.xml.SchemaConstants;
 import net.sourceforge.pmd.util.log.PmdReporter;
@@ -159,7 +159,7 @@ public class RulesetFactoryTestBase {
             map -> {
                 map.put(SchemaConstants.NAME, "MockRuleName");
                 map.put(SchemaConstants.LANGUAGE, DummyLanguageModule.TERSE_NAME);
-                map.put(SchemaConstants.CLASS, net.sourceforge.pmd.lang.rule.MockRuleWithNoProperties.class.getName());
+                map.put(SchemaConstants.CLASS, net.sourceforge.pmd.lang.dummy.MockRuleWithNoProperties.class.getName());
                 map.put(SchemaConstants.MESSAGE, "avoid the mock rule");
             }
         );

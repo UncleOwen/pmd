@@ -6,7 +6,7 @@
   Ruleset used by test RuleSetReferenceIdTest
   </description>
 
-    <rule name="Dummy2BasicMockRule" language="dummy2" since="1.0" message="Test Rule 1" class="net.sourceforge.pmd.lang.rule.MockRule"
+    <rule name="Dummy2BasicMockRule" language="dummy2" since="1.0" message="Test Rule 1" class="net.sourceforge.pmd.lang.dummy.MockRule"
         externalInfoUrl="${pmd.website.baseurl}/rules/dummy/basic.xml#Dummy2BasicMockRule">
         <description>
 Just for test

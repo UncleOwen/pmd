@@ -57,6 +57,36 @@
             </plugin>
 
             <plugin>
+                <!-- package the dummy test language for use by other submodules.
+                     Only the unique package net.sourceforge.pmd.lang.dummy is exported, so that
+                     the test-jar doesn't create split packages with pmd-core on the module path. -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>net/sourceforge/pmd/lang/dummy/**</include>
+                                <include>rulesets/dummy/**</include>
+                                <include>META-INF/services/net.sourceforge.pmd.lang.Language</include>
+                                <include>simplelogger.properties</include>
+                            </includes>
+                            <archive>
+                                <manifestEntries>
+                                    <!-- Avoid a module name clash with the pmd-core main jar, whose
+                                         automatic module name is derived from the file name. -->
+                                    <Automatic-Module-Name>net.sourceforge.pmd.core.tests</Automatic-Module-Name>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>

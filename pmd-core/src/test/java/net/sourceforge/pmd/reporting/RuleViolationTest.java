@@ -15,12 +15,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import net.sourceforge.pmd.DummyParsingHelper;
-import net.sourceforge.pmd.lang.ast.DummyNode;
-import net.sourceforge.pmd.lang.ast.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.document.FileLocation;
 import net.sourceforge.pmd.lang.document.TextRange2d;
-import net.sourceforge.pmd.lang.rule.MockRule;
+import net.sourceforge.pmd.lang.dummy.DummyNode;
+import net.sourceforge.pmd.lang.dummy.DummyNode.DummyRootNode;
+import net.sourceforge.pmd.lang.dummy.MockRule;
 import net.sourceforge.pmd.lang.rule.Rule;
 
 class RuleViolationTest {

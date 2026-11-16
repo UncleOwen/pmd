@@ -16,12 +16,12 @@ import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.jupiter.api.Test;
 
-import net.sourceforge.pmd.lang.DummyLanguageModule;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.document.FileLocation;
 import net.sourceforge.pmd.lang.document.TextFile;
-import net.sourceforge.pmd.lang.rule.MockRule;
+import net.sourceforge.pmd.lang.dummy.DummyLanguageModule;
+import net.sourceforge.pmd.lang.dummy.MockRule;
 import net.sourceforge.pmd.lang.rule.Rule;
 import net.sourceforge.pmd.renderers.Renderer;
 import net.sourceforge.pmd.renderers.XMLRenderer;

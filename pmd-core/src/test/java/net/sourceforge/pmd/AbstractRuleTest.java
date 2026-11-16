@@ -20,10 +20,10 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import net.sourceforge.pmd.lang.ast.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.impl.SuppressionCommentImpl;
 import net.sourceforge.pmd.lang.document.FileId;
+import net.sourceforge.pmd.lang.dummy.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.lang.rule.AbstractRule;
 import net.sourceforge.pmd.lang.rule.RulePriority;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
@@ -216,7 +216,7 @@ class AbstractRuleTest {
 
     @Test
     void twoRulesUsingPatternPropertiesShouldBeEqual() {
-        class MockRuleWithPatternProperty extends net.sourceforge.pmd.lang.rule.MockRule {
+        class MockRuleWithPatternProperty extends net.sourceforge.pmd.lang.dummy.MockRule {
             MockRuleWithPatternProperty(String defaultValue) {
                 super();
                 definePropertyDescriptor(PropertyFactory.regexProperty("myRegexProperty")

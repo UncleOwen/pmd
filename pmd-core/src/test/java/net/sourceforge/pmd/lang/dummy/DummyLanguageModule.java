@@ -6,6 +6,9 @@ package net.sourceforge.pmd.lang.dummy;
 
 import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 import net.sourceforge.pmd.cpd.AnyCpdLexer;
 import net.sourceforge.pmd.cpd.CpdCapableLanguage;
 import net.sourceforge.pmd.cpd.CpdLanguageProperties;
@@ -20,18 +23,20 @@ import net.sourceforge.pmd.lang.ast.Parser.ParserTask;
 import net.sourceforge.pmd.lang.ast.impl.javacc.MalformedSourceException;
 import net.sourceforge.pmd.lang.document.Chars;
 import net.sourceforge.pmd.lang.document.FileLocation;
+import net.sourceforge.pmd.lang.document.TextDocument;
 import net.sourceforge.pmd.lang.document.TextPos2d;
 import net.sourceforge.pmd.lang.document.TextRegion;
-import net.sourceforge.pmd.lang.dummy.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.lang.impl.SimpleLanguageModuleBase;
+import net.sourceforge.pmd.lang.metrics.LanguageMetricsProvider;
+import net.sourceforge.pmd.lang.metrics.Metric;
+import net.sourceforge.pmd.lang.rule.xpath.impl.XPathFunctionDefinition;
+import net.sourceforge.pmd.lang.rule.xpath.impl.XPathHandler;
 import net.sourceforge.pmd.reporting.RuleViolation;
 import net.sourceforge.pmd.reporting.ViolationDecorator;
+import net.sourceforge.pmd.util.CollectionUtil;
 
 /**
- * Dummy language used for testing PMD's tooling.
- *
- * <p>The parser creates a tree of nodes that corresponds to the nesting structure
- * of parentheses in the text, see {@link #readLispNode(ParserTask)}.
+ * Dummy language used for testing PMD.
  */
 public class DummyLanguageModule extends SimpleLanguageModuleBase implements CpdCapableLanguage {
 
@@ -92,14 +97,11 @@ public class DummyLanguageModule extends SimpleLanguageModuleBase implements Cpd
         };
     }
 
-    /**
-     * Returns the language version, whose parser always throws a {@link ParseException}.
-     */
     public LanguageVersion getVersionWhereParserThrows() {
         return getVersion(PARSER_THROWS);
     }
 
-    private static final class Handler extends AbstractPmdLanguageVersionHandler {
+    public static class Handler extends AbstractPmdLanguageVersionHandler {
 
         @Override
         public Parser getParser() {
@@ -115,6 +117,18 @@ public class DummyLanguageModule extends SimpleLanguageModuleBase implements Cpd
         public ViolationDecorator getViolationDecorator() {
             return (node, data) -> data.put(RuleViolation.PACKAGE_NAME, "foo");
         }
+
+        @Override
+        public XPathHandler getXPathHandler() {
+            return XPathHandler.getHandlerForFunctionDefs(imageIsFunction());
+        }
+
+        @Override
+        public LanguageMetricsProvider getLanguageMetricsProvider() {
+            return () -> CollectionUtil.setOf(
+                    Metric.of((node, options) -> 1, (node) -> node,
+                    "Constant value metric", "const1"));
+        }
     }
 
     /**
@@ -123,17 +137,18 @@ public class DummyLanguageModule extends SimpleLanguageModuleBase implements Cpd
      * This is useful to create non-trivial trees with all the relevant
      * data (eg coordinates) set properly.
      *
-     * <p>Eg {@code (a(b)x(c))} will create a tree with a node "a", with two
+     * Eg {@code (a(b)x(c))} will create a tree with a node "a", with two
      * children "b" and "c". "x" is ignored. The node "a" is not the root
-     * node, it has a {@link DummyRootNode} as parent, whose image is "".
+     * node, it has a {@link DummyNode.DummyRootNode} as parent, whose image is "".
      */
-    public static DummyRootNode readLispNode(ParserTask task) {
-        final DummyRootNode root = new DummyRootNode(task);
-        root.setRegion(task.getTextDocument().getEntireRegion());
+    public static DummyNode.DummyRootNode readLispNode(ParserTask task) {
+        TextDocument document = task.getTextDocument();
+        final DummyNode.DummyRootNode root = new DummyNode.DummyRootNode().withTaskInfo(task);
+        root.setRegion(document.getEntireRegion());
 
         DummyNode top = root;
         int lastNodeStart = 0;
-        Chars text = task.getTextDocument().getText();
+        Chars text = document.getText();
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
             if (c == '(') {
@@ -181,5 +196,25 @@ public class DummyLanguageModule extends SimpleLanguageModuleBase implements Cpd
             throw new ParseException("Unbalanced parentheses: " + text);
         }
         return root;
+    }
+
+    @NonNull
+    public static XPathFunctionDefinition imageIsFunction() {
+        return new XPathFunctionDefinition("imageIs", DummyLanguageModule.getInstance()) {
+            @Override
+            public Type[] getArgumentTypes() {
+                return new Type[] {Type.SINGLE_STRING};
+            }
+
+            @Override
+            public Type getResultType() {
+                return Type.SINGLE_BOOLEAN;
+            }
+
+            @Override
+            public FunctionCall makeCallExpression() {
+                return (contextNode, arguments) -> StringUtils.equals(arguments[0].toString(), contextNode.getImage());
+            }
+        };
     }
 }

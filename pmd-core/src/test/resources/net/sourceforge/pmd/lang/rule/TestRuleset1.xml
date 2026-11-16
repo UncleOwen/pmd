@@ -6,7 +6,7 @@
         Ruleset used by test net.sourceforge.pmd.lang.rule.RuleSetWriter and RuleSetFactoryTest
     </description>
 
-    <rule name="MockRule1" language="dummy" since="1.0" message="Test Rule" class="net.sourceforge.pmd.lang.rule.MockRule"
+    <rule name="MockRule1" language="dummy" since="1.0" message="Test Rule" class="net.sourceforge.pmd.lang.dummy.MockRule"
         externalInfoUrl="${pmd.website.baseurl}/rules/test/TestRuleset1.xml#MockRule">
         <description>
 Just for test
@@ -18,7 +18,7 @@ Just for test
      </example>
     </rule>
 
-    <rule name="MockRule2" language="dummy" since="1.0" message="Test Rule 2" class="net.sourceforge.pmd.lang.rule.MockRule"
+    <rule name="MockRule2" language="dummy" since="1.0" message="Test Rule 2" class="net.sourceforge.pmd.lang.dummy.MockRule"
         externalInfoUrl="${pmd.website.baseurl}/rules/test/TestRuleset1.xml#MockRule2">
         <description>
 Just for test

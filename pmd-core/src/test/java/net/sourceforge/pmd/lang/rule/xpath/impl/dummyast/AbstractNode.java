@@ -4,8 +4,8 @@
 
 package net.sourceforge.pmd.lang.rule.xpath.impl.dummyast;
 
-import net.sourceforge.pmd.lang.ast.DummyNode;
 import net.sourceforge.pmd.lang.document.Chars;
+import net.sourceforge.pmd.lang.dummy.DummyNode;
 
 // This class is package private
 // and provides the implementation for getValue().

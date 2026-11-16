@@ -2,9 +2,12 @@
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.lang;
+package net.sourceforge.pmd.lang.dummy;
 
 import java.util.Objects;
+
+import net.sourceforge.pmd.lang.LanguageModuleBase;
+import net.sourceforge.pmd.lang.LanguageRegistry;
 
 /**
  * Dummy language used for testing PMD.
@@ -20,7 +23,12 @@ public class DummyLanguageNoCapabilities extends LanguageModuleBase {
     }
 
     public static DummyLanguageNoCapabilities getInstance() {
-        return (DummyLanguageNoCapabilities) Objects.requireNonNull(LanguageRegistry.ALL_LANGUAGES.getLanguageByFullName(NAME));
+        return (DummyLanguageNoCapabilities) Objects.requireNonNull(RegistryHolder.REGISTRY.getLanguageByFullName(NAME));
+    }
+
+    private static final class RegistryHolder {
+        private static final LanguageRegistry REGISTRY =
+            LanguageRegistry.loadLanguages(DummyLanguageNoCapabilities.class.getClassLoader());
     }
 
 }

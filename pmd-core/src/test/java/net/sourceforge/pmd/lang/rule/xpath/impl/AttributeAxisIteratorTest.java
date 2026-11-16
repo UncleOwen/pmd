@@ -18,8 +18,8 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import net.sourceforge.pmd.lang.ast.DummyNode;
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.dummy.DummyNode;
 import net.sourceforge.pmd.lang.rule.xpath.Attribute;
 import net.sourceforge.pmd.lang.rule.xpath.impl.dummyast.ConcreteNode;
 import net.sourceforge.pmd.util.CollectionUtil;

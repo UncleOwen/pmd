@@ -42,11 +42,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import net.sourceforge.pmd.DummyParsingHelper;
 import net.sourceforge.pmd.FooRule;
-import net.sourceforge.pmd.lang.ast.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.RootNode;
 import net.sourceforge.pmd.lang.document.FileId;
 import net.sourceforge.pmd.lang.document.TextFile;
+import net.sourceforge.pmd.lang.dummy.DummyNode.DummyRootNode;
+import net.sourceforge.pmd.lang.dummy.MockRule;
 import net.sourceforge.pmd.lang.rule.RuleSet.RuleSetBuilder;
 import net.sourceforge.pmd.lang.rule.internal.RuleSets;
 import net.sourceforge.pmd.reporting.Report;

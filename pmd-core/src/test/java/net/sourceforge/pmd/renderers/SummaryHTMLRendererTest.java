@@ -12,8 +12,8 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 
 import net.sourceforge.pmd.FooRule;
-import net.sourceforge.pmd.lang.ast.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.lang.ast.impl.SuppressionCommentImpl;
+import net.sourceforge.pmd.lang.dummy.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.lang.rule.Rule;
 import net.sourceforge.pmd.reporting.FileAnalysisListener;
 import net.sourceforge.pmd.reporting.InternalApiBridge;

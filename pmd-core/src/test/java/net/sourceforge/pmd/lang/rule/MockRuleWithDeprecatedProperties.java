@@ -6,6 +6,7 @@ package net.sourceforge.pmd.lang.rule;
 
 import java.util.Map;
 
+import net.sourceforge.pmd.lang.dummy.MockRuleWithNoProperties;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;
 import net.sourceforge.pmd.util.CollectionUtil;

@@ -2,11 +2,11 @@
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.lang;
+package net.sourceforge.pmd.lang.dummy;
 
 import java.util.Objects;
 
-import net.sourceforge.pmd.lang.DummyLanguageModule.Handler;
+import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.impl.SimpleLanguageModuleBase;
 
 /**
@@ -19,7 +19,7 @@ public class Dummy2LanguageModule extends SimpleLanguageModuleBase {
 
     public Dummy2LanguageModule() {
         super(LanguageMetadata.withId(TERSE_NAME).name(NAME).extensions("dummy2")
-                              .addDefaultVersion("1.0"), new Handler());
+                              .addDefaultVersion("1.0"), new DummyLanguageModule.Handler());
     }
 
     public static Dummy2LanguageModule getInstance() {

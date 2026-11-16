@@ -13,6 +13,8 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import net.sourceforge.pmd.lang.dummy.DummyNode;
+
 /**
  * Unit test for {@link Node} tree traversal methods
  */

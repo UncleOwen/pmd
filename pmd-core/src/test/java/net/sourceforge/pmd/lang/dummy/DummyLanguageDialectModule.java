@@ -2,13 +2,15 @@
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
 
-package net.sourceforge.pmd.lang;
+package net.sourceforge.pmd.lang.dummy;
 
 import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import net.sourceforge.pmd.lang.LanguagePropertyBundle;
+import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.impl.BasePmdDialectLanguageVersionHandler;
 import net.sourceforge.pmd.lang.impl.SimpleDialectLanguageModuleBase;

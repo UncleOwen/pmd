@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import net.sourceforge.pmd.PMDVersion;
+import net.sourceforge.pmd.lang.dummy.MockRule;
 import net.sourceforge.pmd.util.internal.xml.SchemaConstants;
 import net.sourceforge.pmd.util.internal.xml.XmlErrorMessages;
 
@@ -101,7 +102,7 @@ class RuleSetFactoryMessagesTest extends RulesetFactoryTestBase {
         assertThat(log, containsString(
             "Error at dummyRuleset.xml:9:1\n"
                 + " 7| \n"
-                + " 8| <rule name=\"MockRuleName\" language=\"dummy\" class=\"net.sourceforge.pmd.lang.rule.MockRuleWithNoProperties\" message=\"avoid the mock rule\">\n"
+                + " 8| <rule name=\"MockRuleName\" language=\"dummy\" class=\"net.sourceforge.pmd.lang.dummy.MockRuleWithNoProperties\" message=\"avoid the mock rule\">\n"
                 + " 9| <priority>not a priority</priority></rule></ruleset>\n"
                 + "    ^^^^^^^^^ Not a valid priority: 'not a priority', expected a number in [1,5]"
         ));
@@ -218,7 +219,7 @@ class RuleSetFactoryMessagesTest extends RulesetFactoryTestBase {
         assertThat(log, containsString(
                 "Error at " + childRuleset + ":9:1\n"
                         + " 7| \n"
-                        + " 8| <rule name=\"MockRuleName\" language=\"dummy\" class=\"net.sourceforge.pmd.lang.rule.MockRuleWithNoProperties\" message=\"avoid the mock rule\">\n"
+                        + " 8| <rule name=\"MockRuleName\" language=\"dummy\" class=\"net.sourceforge.pmd.lang.dummy.MockRuleWithNoProperties\" message=\"avoid the mock rule\">\n"
                         + " 9| <priority>not a priority</priority></rule></ruleset>\n"
                         + "    ^^^^^^^^^ Not a valid priority: 'not a priority', expected a number in [1,5]"
         ));

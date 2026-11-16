@@ -10,8 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
 import net.sourceforge.pmd.FooRule;
-import net.sourceforge.pmd.lang.ast.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.lang.ast.impl.DummyTreeUtil;
+import net.sourceforge.pmd.lang.dummy.DummyNode.DummyRootNode;
 
 class RuleContextTest {
 

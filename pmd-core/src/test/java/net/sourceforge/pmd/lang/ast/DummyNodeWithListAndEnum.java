@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 import net.sourceforge.pmd.lang.document.TextRegion;
+import net.sourceforge.pmd.lang.dummy.DummyNode;
 
 public class DummyNodeWithListAndEnum extends DummyNode.DummyRootNode {
     public DummyNodeWithListAndEnum() {

@@ -26,11 +26,11 @@ import java.util.Optional;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.junit.jupiter.api.Test;
 
-import net.sourceforge.pmd.lang.ast.DummyNode;
-import net.sourceforge.pmd.lang.ast.DummyNode.DummyNodeTypeB;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.NodeStream;
 import net.sourceforge.pmd.lang.ast.NodeStream.DescendantNodeStream;
+import net.sourceforge.pmd.lang.dummy.DummyNode;
+import net.sourceforge.pmd.lang.dummy.DummyNode.DummyNodeTypeB;
 
 
 /**

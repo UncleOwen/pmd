@@ -7,11 +7,11 @@ package net.sourceforge.pmd.lang.ast.impl;
 import java.util.List;
 import java.util.function.Supplier;
 
-import net.sourceforge.pmd.lang.ast.DummyNode;
-import net.sourceforge.pmd.lang.ast.DummyNode.DummyNodeTypeB;
-import net.sourceforge.pmd.lang.ast.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.ast.NodeStream;
+import net.sourceforge.pmd.lang.dummy.DummyNode;
+import net.sourceforge.pmd.lang.dummy.DummyNode.DummyNodeTypeB;
+import net.sourceforge.pmd.lang.dummy.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.util.CollectionUtil;
 
 

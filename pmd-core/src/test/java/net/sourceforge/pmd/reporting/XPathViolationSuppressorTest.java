@@ -16,7 +16,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import net.sourceforge.pmd.DummyParsingHelper;
 import net.sourceforge.pmd.FooRule;
-import net.sourceforge.pmd.lang.ast.DummyNode.DummyRootNode;
+import net.sourceforge.pmd.lang.dummy.DummyNode.DummyRootNode;
 import net.sourceforge.pmd.lang.rule.Rule;
 import net.sourceforge.pmd.lang.rule.xpath.internal.SaxonXPathRuleQuery;
 

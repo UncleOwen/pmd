@@ -11,8 +11,8 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 
-import net.sourceforge.pmd.lang.DummyLanguageModule;
 import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.lang.dummy.DummyLanguageModule;
 
 class FragmentedTextDocumentTest {
 

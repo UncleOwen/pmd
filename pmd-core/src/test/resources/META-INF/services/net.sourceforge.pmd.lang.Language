@@ -1,5 +1,5 @@
-net.sourceforge.pmd.lang.DummyLanguageModule
-net.sourceforge.pmd.lang.Dummy2LanguageModule
-net.sourceforge.pmd.lang.CpdOnlyDummyLanguage
-net.sourceforge.pmd.lang.DummyLanguageNoCapabilities
-net.sourceforge.pmd.lang.DummyLanguageDialectModule
+net.sourceforge.pmd.lang.dummy.DummyLanguageModule
+net.sourceforge.pmd.lang.dummy.Dummy2LanguageModule
+net.sourceforge.pmd.lang.dummy.CpdOnlyDummyLanguage
+net.sourceforge.pmd.lang.dummy.DummyLanguageNoCapabilities
+net.sourceforge.pmd.lang.dummy.DummyLanguageDialectModule

@@ -15,8 +15,9 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import net.sourceforge.pmd.lang.Dummy2LanguageModule;
 import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.dummy.Dummy2LanguageModule;
+import net.sourceforge.pmd.lang.dummy.MockRule;
 import net.sourceforge.pmd.lang.rule.internal.RuleSetReference;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.properties.PropertyFactory;

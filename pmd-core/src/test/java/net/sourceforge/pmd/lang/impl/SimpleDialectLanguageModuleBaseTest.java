@@ -11,10 +11,10 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import net.sourceforge.pmd.lang.DummyLanguageDialectModule;
-import net.sourceforge.pmd.lang.DummyLanguageModule;
 import net.sourceforge.pmd.lang.LanguageProcessor;
 import net.sourceforge.pmd.lang.LanguagePropertyBundle;
+import net.sourceforge.pmd.lang.dummy.DummyLanguageDialectModule;
+import net.sourceforge.pmd.lang.dummy.DummyLanguageModule;
 import net.sourceforge.pmd.lang.metrics.Metric;
 import net.sourceforge.pmd.lang.rule.xpath.impl.XPathFunctionDefinition;
 import net.sourceforge.pmd.properties.PropertyDescriptor;

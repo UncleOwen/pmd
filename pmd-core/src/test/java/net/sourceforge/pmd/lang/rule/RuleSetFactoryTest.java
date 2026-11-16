@@ -32,6 +32,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 
+import net.sourceforge.pmd.lang.dummy.MockRule;
+import net.sourceforge.pmd.lang.dummy.MockRuleWithNoProperties;
 import net.sourceforge.pmd.properties.PropertyDescriptor;
 import net.sourceforge.pmd.util.internal.ResourceLoader;
 import net.sourceforge.pmd.util.internal.xml.SchemaConstants;
@@ -168,7 +170,7 @@ class RuleSetFactoryTest extends RulesetFactoryTestBase {
         assertEquals(1, rs.size());
         Rule r = rs.getRules().iterator().next();
         assertEquals("MockRuleName", r.getName());
-        assertEquals("net.sourceforge.pmd.lang.rule.MockRuleWithNoProperties", r.getRuleClass());
+        assertEquals("net.sourceforge.pmd.lang.dummy.MockRuleWithNoProperties", r.getRuleClass());
         assertEquals("avoid the mock rule", r.getMessage());
     }
 
@@ -180,7 +182,7 @@ class RuleSetFactoryTest extends RulesetFactoryTestBase {
 
             Rule r = rs.getRules().iterator().next();
             assertEquals("MockRuleName", r.getName());
-            assertEquals("net.sourceforge.pmd.lang.rule.MockRule", r.getRuleClass());
+            assertEquals("net.sourceforge.pmd.lang.dummy.MockRule", r.getRuleClass());
             assertEquals("avoid the mock rule", r.getMessage());
         });
         assertThat(log, containsString("Empty ref attribute"));
@@ -1097,7 +1099,7 @@ class RuleSetFactoryTest extends RulesetFactoryTestBase {
         + "language=\"dummy\" \n"
         + "name=\"MockRuleName\" \n"
         + "message=\"avoid the mock rule\" \n"
-        + "class=\"net.sourceforge.pmd.lang.rule.MockRule\">\n"
+        + "class=\"net.sourceforge.pmd.lang.dummy.MockRule\">\n"
         + "</rule>\n"
         + " <rule ref=\"MockRuleName\" name=\"MockRuleNameRef\"/> \n"
         + "</ruleset>";
@@ -1110,7 +1112,7 @@ class RuleSetFactoryTest extends RulesetFactoryTestBase {
         + "language=\"dummy\" \n"
         + "name=\"MockRuleName\" \n"
         + "message=\"avoid the mock rule\" \n"
-        + "class=\"net.sourceforge.pmd.lang.rule.MockRule\">\n"
+        + "class=\"net.sourceforge.pmd.lang.dummy.MockRule\">\n"
         + "</rule>\n"
         + " <rule ref=\"MockRuleName\" name=\"MockRuleNameRef\"><priority>2</priority></rule> \n"
         + " <rule ref=\"MockRuleNameRef\" name=\"MockRuleNameRefRef\"><priority>1</priority></rule> \n"
@@ -1158,7 +1160,7 @@ class RuleSetFactoryTest extends RulesetFactoryTestBase {
         + "ref=\"\" \n"
         + "name=\"MockRuleName\" \n"
         + "message=\"avoid the mock rule\" \n"
-        + "class=\"net.sourceforge.pmd.lang.rule.MockRule\">\n"
+        + "class=\"net.sourceforge.pmd.lang.dummy.MockRule\">\n"
         + "<priority>3</priority>\n"
         + "</rule></ruleset>";
 

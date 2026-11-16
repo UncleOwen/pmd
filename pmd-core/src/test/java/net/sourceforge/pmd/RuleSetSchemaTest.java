@@ -88,7 +88,7 @@ class RuleSetSchemaTest {
             + "  This ruleset checks my code for bad stuff\n"
             + "  </description>\n"
             + "  <rule name=\"DummyBasicMockRule\" language=\"dummy\" since=\"1.0\" message=\"Test Rule 1\"\n"
-            + "        class=\"net.sourceforge.pmd.lang.rule.MockRule\"\n"
+            + "        class=\"net.sourceforge.pmd.lang.dummy.MockRule\"\n"
             + "        externalInfoUrl=\"${pmd.website.baseurl}/rules/dummy/basic.xml#DummyBasicMockRule\"\n"
             + "  >\n"
             + "        <description>\n"

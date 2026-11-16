@@ -21,6 +21,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import net.sourceforge.pmd.PMDConfiguration;
 import net.sourceforge.pmd.internal.util.ClasspathClassLoader;
+import net.sourceforge.pmd.lang.dummy.DummyLanguageModule;
 
 class JvmLanguagePropertyBundleTest {
     @TempDir

@@ -11,8 +11,8 @@ import java.io.File;
 
 import org.junit.jupiter.api.Test;
 
-import net.sourceforge.pmd.lang.DummyLanguageModule;
 import net.sourceforge.pmd.lang.LanguageFilenameFilter;
+import net.sourceforge.pmd.lang.dummy.DummyLanguageModule;
 
 /**
  * Tests on FileSelector.

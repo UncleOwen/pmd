@@ -17,8 +17,8 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import net.sourceforge.pmd.lang.DummyLanguageNoCapabilities;
 import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.dummy.DummyLanguageNoCapabilities;
 
 class CPDConfigurationTest {
 

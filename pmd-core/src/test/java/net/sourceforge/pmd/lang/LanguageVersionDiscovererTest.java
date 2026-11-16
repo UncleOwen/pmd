@@ -15,6 +15,9 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import net.sourceforge.pmd.lang.dummy.DummyLanguageDialectModule;
+import net.sourceforge.pmd.lang.dummy.DummyLanguageModule;
+
 class LanguageVersionDiscovererTest {
 
     @Test
